@@ -2,7 +2,6 @@
 #include "base64.h"
 #include "sha1.h"
 
-#include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
 #include <openssl/ec.h>

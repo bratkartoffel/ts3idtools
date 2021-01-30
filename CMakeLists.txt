@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.9.4)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -msha -msse4 -O3 -Wl,-s -flto")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -msha -msse4 -g -O0 -flto")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msha -msse4 -flto -D_GNU_SOURCE")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -Wl,-s")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -O0")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto -static")
 set(CMAKE_AR "gcc-ar")
 set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")

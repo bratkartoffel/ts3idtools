@@ -12,7 +12,6 @@
 #include <unistd.h>
 
 #ifdef HAVE_SYS_RESOURCE_H
-#include <errno.h>
 #include <sys/resource.h>
 #endif
 
@@ -35,7 +34,10 @@ static void *stats_start(void *arg) {
     debug_printf("> stats_start(%p)\n", arg);
     uint16_t statsInterval = *(uint16_t *) arg;
     // immediately stop stats thread if disabled
-    if (statsInterval == 0) return NULL;
+    if (statsInterval == 0) {
+        debug_printf("< stats_start(): %p\n", NULL);
+        return NULL;
+    }
 
     uint64_t old_counter = counter;
     while (!do_stop) {
@@ -45,18 +47,21 @@ static void *stats_start(void *arg) {
         long double diff_counter = new_counter - old_counter;
         diff_counter /= 1000000;
         long double performance_total = diff_counter / statsInterval;
-        printf("%.02Lf mh/s - counter currently at %" PRIu64 " (best result: ", performance_total, new_counter);
 
         bool found = false;
         for (int i = SHA_DIGEST_LENGTH * 8 - 1; i >= 0; i--) {
             if (results[i] != 0) {
-                printf("level %u with counter %" PRIu64 ")\n", i, results[i]);
+                printf("%.02Lf mh/s - counter currently at %" PRIu64 " (best result: level %u with counter %" PRIu64 ")\n",
+                       performance_total, new_counter, i, results[i]);
+                fflush(stdout);
                 found = true;
                 break;
             }
         }
         if (!found) {
-            printf("{none})\n");
+            printf("%.02Lf mh/s - counter currently at %" PRIu64 " (best result: {none})\n",
+                   performance_total, new_counter);
+            fflush(stdout);
         }
         old_counter = new_counter;
         fflush(stdout);
@@ -85,8 +90,9 @@ static void *worker_start_software(void *arg) {
             uint8_t calc_level = leading_zero_bits(hash, level_bits_short_circuit);
             if (calc_level >= settings->level) {
                 if (results[calc_level] == 0) {
-                    printf("Thread[%u]: Found level=%u with counter %" PRIu64 "!\n", settings->worker_id, calc_level,
-                           i);
+                    printf("Thread[%u]: Found level=%u with counter %" PRIu64 "!\n",
+                           settings->worker_id, calc_level, i);
+                    fflush(stdout);
                     results[calc_level] = i;
                 }
                 fflush(stdout);
@@ -121,8 +127,9 @@ static void *worker_start_cpu(void *arg) {
             uint8_t calc_level = leading_zero_bits(hash, level_bits_short_circuit);
             if (calc_level >= settings->level) {
                 if (results[calc_level] == 0) {
-                    printf("Thread[%u]: Found level=%u with counter %" PRIu64 "!\n", settings->worker_id, calc_level,
-                           i);
+                    printf("Thread[%u]: Found level=%u with counter %" PRIu64 "!\n",
+                           settings->worker_id, calc_level, i);
+                    fflush(stdout);
                     results[calc_level] = i;
                 }
                 fflush(stdout);
@@ -229,6 +236,12 @@ static bool start_workers(uint8_t threads, worker_settings settings[threads],
     debug_printf("> start_workers(%u, %p, %s, %u, %u, %u)\n",
                  threads, (void *) settings, pubkey, blockSize, level, one_shot);
     bool result = true;
+    void *(*worker_func)(void *);
+    if (check_for_intel_sha_extensions()) {
+        worker_func = worker_start_cpu;
+    } else {
+        worker_func = worker_start_software;
+    }
     for (uint8_t i = 0; i < threads; i++) {
         memset(&settings[i], 0x00, sizeof(struct worker_settings_t));
         settings[i].thread_id = 0;
@@ -239,18 +252,20 @@ static bool start_workers(uint8_t threads, worker_settings settings[threads],
         settings[i].pubkey_len = strlen(pubkey);
         memcpy(settings[i].pubkey, pubkey, settings[i].pubkey_len);
 
-        void *(*worker_func)(void *);
-        if (i == 0 && check_for_intel_sha_extensions()) {
-            worker_func = worker_start_cpu;
-        } else {
-            worker_func = worker_start_software;
-        }
         debug_printf("> start_workers(): starting %u\n", i);
         if (pthread_create(&settings[i].thread_id, NULL, worker_func, &settings[i])) {
             fprintf(stderr, "pthread_create(%u) failed\n", i);
             result = false;
             break;
         }
+#ifdef HAVE_SETAFFINITY
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(i, &cpuset);
+        if (pthread_setaffinity_np(settings[i].thread_id, sizeof(cpuset), &cpuset)) {
+            fprintf(stderr, "pthread_setaffinity_np(%u) failed: %u (%s)\n", i, errno, strerror(errno));
+        }
+#endif
     }
     debug_printf("< start_workers(): %u\n", result);
     return result;
