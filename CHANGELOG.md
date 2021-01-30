@@ -19,7 +19,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 * Initial release
 
-[Unreleased]:  https://github.com/bratkartoffel/ts3idtools/compare/v1.0.0...HEAD
+[Unreleased]:  https://github.com/bratkartoffel/ts3idtools/compare/v1.0.1...HEAD
 
 [v1.0.1]:      https://github.com/bratkartoffel/ts3idtools/compare/v1.0.0...v1.0.1
 
