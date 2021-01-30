@@ -112,6 +112,32 @@ Per Thread:   11.55 mh/s
 The counter value shown (`274687375`) can be directly set in the identity file created by the `ts3idgen` tools and raise
 the security level directly to 28.
 
+## FAQ
+
+### How can I export my identity?
+
+To increase the security level of your identity, you first have to export it from the teamspeak client. Open your
+identities (menu tools -> identities)), select yours from the list and right click on it. On the context menu you can
+choose the option "Export". Just save the file on a safe place and DO NOT GIVE IT TO SOMEONE ELSE!
+
+When you open the file with a regular text editor (e.g. notepad), you can see some basic information from this identity,
+although obfuscated and in an unreadable form. You're looking for the `identity` line, take everything after the `=`.
+This part contains not only the public key, it also contains the private key.
+
+Use the `ts3iddump` tool to extract the publickey needed for `ts3idcrunch`.
+
+### How can I increase my security level?
+
+Take the public key as shown by the `ts3iddump` tool and the counter value to start `ts3idcrunch`. When you've increased
+your level as far as you wanted, you may cancel the generation. Take the result counter and replace the previous counter
+in your identity file with the new value. After importing it into teamspeak again your security level should show the
+new value.
+
+### Why did you do this?
+
+Good question. I don't know, it was a mix of boredom and the will to write something in c again. It turned out to be not
+that easy to parse and extract the identity and was fun to optimize the crunching process for the security level.
+
 ## Development
 
 Besides libressl there isn't anything special about building this project. Just clone the repository (or download the
