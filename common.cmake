@@ -10,17 +10,20 @@ target_compile_options(${PROJECT_NAME} PUBLIC
         -Bsymbolic-functions
         )
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DVERSION="${VERSION}")
-if (NOT WIN32)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -D_FORTIFY_SOURCE=2)
-endif ()
 
 check_symbol_exists(setpriority "sys/resource.h" HAVE_SYS_RESOURCE_H)
 if (HAVE_SYS_RESOURCE_H)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DHAVE_SYS_RESOURCE_H)
 endif ()
 
+check_symbol_exists(pthread_setaffinity_np "pthread.h" HAVE_SETAFFINITY)
+if (HAVE_SETAFFINITY)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DHAVE_SETAFFINITY)
+endif ()
+
 if (NOT WIN32)
     target_compile_options(${PROJECT_NAME} PUBLIC -fstack-protector-strong -Wstack-protector --param ssp-buffer-size=4)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -D_FORTIFY_SOURCE=2)
 endif ()
 
 target_link_libraries(${PROJECT_NAME} -Wl,-Bstatic crypto)

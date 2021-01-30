@@ -108,7 +108,7 @@ static bool validate_arguments(const char *identity_in) {
         result = false;
     }
     debug_printf("< validate_arguments(): %u\n", result);
-    return true;
+    return result;
 }
 
 static void print_arguments(const char *identity_in, bool print_secret) {
