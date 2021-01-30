@@ -7,7 +7,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto -static")
 set(CMAKE_AR "gcc-ar")
 set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
 set(CMAKE_C_ARCHIVE_FINISH true)
-set(VERSION "1.0.0")
+set(VERSION "1.0.1-SNAPSHOT")
 
 # enable cmake modules
 include(CheckCCompilerFlag)
