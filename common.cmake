@@ -28,10 +28,11 @@ endif ()
 
 target_link_libraries(${PROJECT_NAME} -Wl,-Bstatic crypto)
 target_include_directories(${PROJECT_NAME} PUBLIC libressl/include)
-if (CMAKE_BUILD_TYPE STREQUAL Release)
+
+if (CMAKE_BUILD_TYPE STREQUAL Release AND SELF_PACKER_FOR_EXECUTABLE)
     add_custom_command(TARGET ${PROJECT_NAME}
             POST_BUILD
-            COMMAND upx -v $<TARGET_FILE:${PROJECT_NAME}>
+            COMMAND ${SELF_PACKER_FOR_EXECUTABLE} -v $<TARGET_FILE:${PROJECT_NAME}>
             COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/precompiled
             COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/precompiled
             )

@@ -7,7 +7,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-* No changes yet
+* Build: Use cmake module for upx
 
 ## [v1.0.1] - 2020-01-30
 

@@ -13,6 +13,7 @@ set(VERSION "1.0.2-SNAPSHOT")
 # enable cmake modules
 include(CheckCCompilerFlag)
 include(FindPackageHandleStandardArgs)
+include(FindSelfPackers)
 
 # build libressl
 set(BUILD_SHARED_LIBS false)
