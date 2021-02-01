@@ -11,7 +11,11 @@ bool debug = false;
 size_t append_counter(uint8_t data[128], size_t length, uint64_t value) {
     // no debug logging, extremely performance sensitive!
     size_t result;
-    if (value > 999999999999999L) {
+    if (value > 99999999999999999L) {
+        result = 18;
+    } else if (value > 9999999999999999L) {
+        result = 17;
+    } else if (value > 999999999999999L) {
         result = 16;
     } else if (value > 99999999999999L) {
         result = 15;
