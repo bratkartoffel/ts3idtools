@@ -76,7 +76,7 @@ static void *worker_start_software(void *arg) {
     uint32_t first_block_state[5]  __attribute__((aligned (16)));
     do_sha1_first_block(settings->pubkey, first_block_state);
     size_t pubkey_len = settings->pubkey_len;
-    uint8_t hash[SHA_DIGEST_LENGTH];
+    uint32_t hash[5];
     uint8_t level_bits_short_circuit =
             settings->level % 8 == 0 ? settings->level : settings->level - (settings->level % 8);
     debug_printf("  worker_start_software: level_bits_short_circuit=%u\n", level_bits_short_circuit);
@@ -113,7 +113,7 @@ static void *worker_start_cpu(void *arg) {
     uint32_t first_block_state[5]  __attribute__((aligned (16)));
     do_sha1_first_block(settings->pubkey, first_block_state);
     size_t pubkey_len = settings->pubkey_len;
-    uint8_t hash[SHA_DIGEST_LENGTH];
+    uint32_t hash[5];
     uint8_t level_bits_short_circuit =
             settings->level % 8 == 0 ? settings->level : settings->level - (settings->level % 8);
     debug_printf("  worker_start_cpu: level_bits_short_circuit=%u\n", level_bits_short_circuit);
