@@ -49,3 +49,13 @@ add_executable(${PROJECT_NAME}
         src/sha1.c
         )
 include(common.cmake)
+
+# ----- testapp for crunching -----
+project(ts3idtests C)
+add_executable(${PROJECT_NAME}
+        src/globals.c
+        src/base64.c
+        src/ts3idtests.c
+        src/sha1.c
+        )
+include(common.cmake)
