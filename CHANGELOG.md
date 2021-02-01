@@ -7,7 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-* No changes yet
+* Build: Use cmake module for upx
+* ts3idcrunch: Enhance incrementing the counter (~10% hashrate improvement)
+* ts3idcrunch: Add support for longer counters
 
 ## [v1.0.1] - 2020-01-30
 
@@ -19,7 +21,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 * Initial release
 
-[Unreleased]:  https://github.com/bratkartoffel/ts3idtools/compare/v1.0.0...HEAD
+[Unreleased]:  https://github.com/bratkartoffel/ts3idtools/compare/v1.0.1...HEAD
 
 [v1.0.1]:      https://github.com/bratkartoffel/ts3idtools/compare/v1.0.0...v1.0.1
 

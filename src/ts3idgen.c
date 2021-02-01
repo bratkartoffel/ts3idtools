@@ -169,13 +169,13 @@ static uint64_t increase_level_to_min(size_t pubkey_len, uint8_t *pubkey) {
     debug_printf("> increase_level_to_min(%" PRIu64 ", %p)\n", pubkey_len, pubkey);
     uint32_t state[5] __attribute__((aligned (16)));
     do_sha1_first_block(pubkey, state);
-    uint8_t hash[SHA_DIGEST_LENGTH] = {0xFF};
+    uint32_t hash[5];
     uint64_t counter = 0;
     uint8_t level;
     do {
         counter++;
         size_t data_len = append_counter(pubkey, pubkey_len, counter);
-        do_sha1_second_block_software(pubkey, data_len, state, hash);
+        do_sha1_second_block_without_cpu_ext(pubkey, data_len, state, hash);
         level = leading_zero_bits(hash, 0);
         debug_printf("  increase_level_to_min: counter=%" PRIu64 ", level=%u\n", counter, level);
     } while (level < 8);

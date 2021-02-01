@@ -11,7 +11,11 @@ bool debug = false;
 size_t append_counter(uint8_t data[128], size_t length, uint64_t value) {
     // no debug logging, extremely performance sensitive!
     size_t result;
-    if (value > 999999999999999L) {
+    if (value > 99999999999999999L) {
+        result = 18;
+    } else if (value > 9999999999999999L) {
+        result = 17;
+    } else if (value > 999999999999999L) {
         result = 16;
     } else if (value > 99999999999999L) {
         result = 15;
@@ -53,6 +57,22 @@ size_t append_counter(uint8_t data[128], size_t length, uint64_t value) {
     return result + length;
 }
 
+size_t increment_counter(uint8_t data[128], size_t pubkey_length, size_t complete_length) {
+    uint8_t *start_counter = data + pubkey_length;
+    uint8_t *end_counter = data + complete_length;
+    for (uint8_t *pos = end_counter - 1; pos >= start_counter; pos--) {
+        if (*pos < '9') {
+            *pos = *pos + 1;
+            return complete_length;
+        } else {
+            *pos = '0';
+        }
+    }
+    *start_counter = '1';
+    *end_counter = '0';
+    return complete_length + 1;
+}
+
 uint8_t get_security_level(const char *pubkey, uint64_t counter) {
     debug_printf("> get_security_level(%s, %" PRIu64 ")\n",
                  pubkey, counter);
@@ -65,24 +85,31 @@ uint8_t get_security_level(const char *pubkey, uint64_t counter) {
     uint8_t hash[SHA_DIGEST_LENGTH];
     EVP_DigestFinal(ctx, hash, NULL);
     EVP_MD_CTX_free(ctx);
-    debug_print_hex("  get_security_level: hash", hash, SHA_DIGEST_LENGTH);
-    uint8_t result = leading_zero_bits(hash, 0);
+    uint32_t state[5];
+    // store as big-endian
+    state[0] = hash[3] << 24 | hash[2] << 16 | hash[1] << 8 | hash[0];
+    state[1] = hash[7] << 24 | hash[6] << 16 | hash[5] << 8 | hash[4];
+    state[2] = hash[11] << 24 | hash[10] << 16 | hash[9] << 8 | hash[8];
+    state[3] = hash[15] << 24 | hash[14] << 16 | hash[13] << 8 | hash[12];
+    state[4] = hash[19] << 24 | hash[18] << 16 | hash[17] << 8 | hash[16];
+    debug_print_hex("  get_security_level: state", state, 20);
+    uint8_t result = leading_zero_bits(state, 0);
     debug_printf("< get_security_level(): %u\n", result);
     return result;
 }
 
-uint8_t leading_zero_bits(const uint8_t hash[SHA_DIGEST_LENGTH], uint8_t min_level) {
+uint8_t leading_zero_bits(const uint32_t hash[5], uint8_t min_level) {
     // no debug logging, extremely performance sensitive!
     uint8_t curr = 0;
     int i;
-    for (i = 0; i < SHA_DIGEST_LENGTH; i++) {
-        if (hash[i] == 0) curr += 8;
+    for (i = 0; i < 5; i++) {
+        if (hash[i] == 0) curr += 32;
         else break;
     }
     // short circuit for low levels
     if (curr < min_level) return curr;
-    if (i < SHA_DIGEST_LENGTH) {
-        for (int bit = 0; bit < 8; bit++) {
+    if (i < 5) {
+        for (int bit = 0; bit < 32; bit++) {
             if ((hash[i] & (1 << bit)) == 0) curr++;
             else break;
         }

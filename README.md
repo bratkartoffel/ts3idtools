@@ -29,7 +29,7 @@ Options:
 Example:
 
 ```
-#> ./ts3idgen --name="Generated" --nickname="bratkartoffel" --output=ts3_identity.ini
+#> ./ts3idgen --name="Generated" --nickname="bratkartoffel" --output="ts3_identity.ini"
 #> cat ts3_identity.ini
 [Identity]
 id=Generated
@@ -57,7 +57,7 @@ Options:
 Example:
 
 ```
-#> ./ts3iddump --identity="351Ve8FwO31c7udTp1AEaFUcBipYaf1fCQBKCHAAZxNABkA9AUFQen1FUxsFNTYAB39TMVxgXQACYjUwQn0GYHBjfUFnQUFfMgFRUAdoEhM5DAtHWAR/N1B+Kxg0emBWUHhGKmhcXU9VVUNJUUN2aW5EOFl5R0VYOFBrMmw1MDlKZ1VIQjUwK3BMSkZE
+#> ./ts3iddump --identity="351Ve8FwO31c7udTp1AEaFUcBipYaf1fCQBKCHAAZxNABkA9AUFQen1FUxsFNTYAB39TMVxgXQACYjUwQn0GYHBjfUFnQUFfMgFRUAdoEhM5DAtHWAR/N1B+Kxg0emBWUHhGKmhcXU9VVUNJUUN2aW5EOFl5R0VYOFBrMmw1MDlKZ1VIQjUwK3BMSkZE"
 SStXdk9FTE9YMDZnPT0=" --secret
 
 UUID=v3OXI7tHArV98DTDJPgGTcC8waQ=
@@ -97,16 +97,16 @@ Options:
 Example:
 
 ```
-#> ./ts3idcrunch --publickey="MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=" --level=28 --one-shot --threads=6
+#> ./ts3idcrunch --publickey="MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=" --level=32 --one-shot --threads=6
 
 Start crunching...
-Thread[0]: Found level=28 with counter 274687375!
+Thread[1]: Found level=32 with counter 2303180066!
 -------------------
-Results:      {28=274687375}
-Last counter: 278921216
-Runtime:      4.02 s
-Performance:  69.31 mh/s
-Per Thread:   11.55 mh/s
+Results:      {32=2303180066}
+Last counter: 2308964352
+Runtime:      21.24 s
+Performance:  108.69 mh/s
+Per Thread:   18.11 mh/s
 ```
 
 The counter value shown (`274687375`) can be directly set in the identity file created by the `ts3idgen` tools and raise

@@ -28,15 +28,15 @@
         }                                         \
     } while (0)
 
-#define debug_print_hex(prefix, x, len)                    \
-    do {                                                   \
-        if(debug) {                                        \
-            debug_printf("%s=", prefix);                   \
-            for (int i = 0; i < (int) len; i++) {          \
-                debug_printf("%02x ", (x)[i]);             \
-            }                                              \
-            debug_printf("\n");                            \
-        }                                                  \
+#define debug_print_hex(prefix, x, len)                      \
+    do {                                                     \
+        if(debug) {                                          \
+            debug_printf("%s=", prefix);                     \
+            for (int i = 0; i < (int) len; i++) {            \
+                debug_printf("%02x ", ((uint8_t*)(x))[i]);   \
+            }                                                \
+            debug_printf("\n");                              \
+        }                                                    \
     } while (0)
 
 
@@ -44,9 +44,11 @@ extern bool debug;
 
 uint8_t get_security_level(const char *pubkey, uint64_t counter);
 
-uint8_t leading_zero_bits(const uint8_t hash[SHA_DIGEST_LENGTH], uint8_t min_level);
+uint8_t leading_zero_bits(const uint32_t hash[5], uint8_t min_level);
 
 size_t append_counter(uint8_t data[128], size_t length, uint64_t value);
+
+size_t increment_counter(uint8_t data[128], size_t pubkey_length, size_t complete_length);
 
 bool ts3_xor(size_t a_len, const uint8_t *a, int aoffs,
              size_t b_len, const uint8_t *b, int boffs,

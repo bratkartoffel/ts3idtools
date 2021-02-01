@@ -8,11 +8,12 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto -static")
 set(CMAKE_AR "gcc-ar")
 set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
 set(CMAKE_C_ARCHIVE_FINISH true)
-set(VERSION "1.0.1")
+set(VERSION "1.0.2")
 
 # enable cmake modules
 include(CheckCCompilerFlag)
 include(FindPackageHandleStandardArgs)
+include(FindSelfPackers)
 
 # build libressl
 set(BUILD_SHARED_LIBS false)
@@ -45,6 +46,16 @@ add_executable(${PROJECT_NAME}
         src/globals.c
         src/base64.c
         src/ts3idgen.c
+        src/sha1.c
+        )
+include(common.cmake)
+
+# ----- testapp for crunching -----
+project(ts3idtests C)
+add_executable(${PROJECT_NAME}
+        src/globals.c
+        src/base64.c
+        src/ts3idtests.c
         src/sha1.c
         )
 include(common.cmake)

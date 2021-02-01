@@ -14,8 +14,7 @@ void do_sha1_first_block(uint8_t data[128], uint32_t state[5]) {
     sha1_compress_software(state, data);
 }
 
-void do_sha1_second_block_software(uint8_t data[128], size_t len, uint32_t state[5],
-                                   uint8_t hash[SHA_DIGEST_LENGTH]) {
+void do_sha1_second_block_without_cpu_ext(uint8_t data[128], size_t len, const uint32_t state[5], uint32_t hash[5]) {
     // prepare second block
     uint8_t *block = data + 64;
     block[len - 64] = 0x80;
@@ -24,35 +23,14 @@ void do_sha1_second_block_software(uint8_t data[128], size_t len, uint32_t state
     len *= 8;
     block[62] = len >> 8;
     block[63] = len & 0xFF;
-    uint32_t s[5] __attribute__((aligned (16))) = {
-            state[0],
-            state[1],
-            state[2],
-            state[3],
-            state[4],
-    };
 
-    sha1_compress_software(s, block);
-    hash[0] = s[0] >> 24;
-    hash[1] = s[0] >> 16;
-    hash[2] = s[0] >> 8;
-    hash[3] = s[0];
-    hash[4] = s[1] >> 24;
-    hash[5] = s[1] >> 16;
-    hash[6] = s[1] >> 8;
-    hash[7] = s[1];
-    hash[8] = s[2] >> 24;
-    hash[9] = s[2] >> 16;
-    hash[10] = s[2] >> 8;
-    hash[11] = s[2];
-    hash[12] = s[3] >> 24;
-    hash[13] = s[3] >> 16;
-    hash[14] = s[3] >> 8;
-    hash[15] = s[3];
-    hash[16] = s[4] >> 24;
-    hash[17] = s[4] >> 16;
-    hash[18] = s[4] >> 8;
-    hash[19] = s[4];
+    hash[0] = state[0];
+    hash[1] = state[1];
+    hash[2] = state[2];
+    hash[3] = state[3];
+    hash[4] = state[4];
+
+    sha1_compress_software(hash, block);
 #if 0
     // for debugging / verifying optimizations
     debug_printf("===========================\n");
@@ -61,8 +39,7 @@ void do_sha1_second_block_software(uint8_t data[128], size_t len, uint32_t state
 #endif
 }
 
-void do_sha1_second_block_cpu(uint8_t data[128], size_t len, uint32_t state[5],
-                              uint8_t hash[SHA_DIGEST_LENGTH]) {
+void do_sha1_second_block_with_cpu_ext(uint8_t data[128], size_t len, const uint32_t state[5], uint32_t hash[5]) {
     // prepare second block
     uint8_t *block = data + 64;
     block[len - 64] = 0x80;
@@ -71,35 +48,14 @@ void do_sha1_second_block_cpu(uint8_t data[128], size_t len, uint32_t state[5],
     len *= 8;
     block[62] = len >> 8;
     block[63] = len & 0xFF;
-    uint32_t s[5] __attribute__((aligned (16))) = {
-            state[0],
-            state[1],
-            state[2],
-            state[3],
-            state[4],
-    };
 
-    sha1_compress_cpu(s, block);
-    hash[0] = s[0] >> 24;
-    hash[1] = s[0] >> 16;
-    hash[2] = s[0] >> 8;
-    hash[3] = s[0];
-    hash[4] = s[1] >> 24;
-    hash[5] = s[1] >> 16;
-    hash[6] = s[1] >> 8;
-    hash[7] = s[1];
-    hash[8] = s[2] >> 24;
-    hash[9] = s[2] >> 16;
-    hash[10] = s[2] >> 8;
-    hash[11] = s[2];
-    hash[12] = s[3] >> 24;
-    hash[13] = s[3] >> 16;
-    hash[14] = s[3] >> 8;
-    hash[15] = s[3];
-    hash[16] = s[4] >> 24;
-    hash[17] = s[4] >> 16;
-    hash[18] = s[4] >> 8;
-    hash[19] = s[4];
+    hash[0] = state[0];
+    hash[1] = state[1];
+    hash[2] = state[2];
+    hash[3] = state[3];
+    hash[4] = state[4];
+
+    sha1_compress_cpu(hash, block);
 #if 0
     // for debugging / verifying optimizations
     debug_printf("===========================\n");
