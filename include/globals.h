@@ -28,15 +28,15 @@
         }                                         \
     } while (0)
 
-#define debug_print_hex(prefix, x, len)                    \
-    do {                                                   \
-        if(debug) {                                        \
-            debug_printf("%s=", prefix);                   \
-            for (int i = 0; i < (int) len; i++) {          \
-                debug_printf("%02x ", (x)[i]);             \
-            }                                              \
-            debug_printf("\n");                            \
-        }                                                  \
+#define debug_print_hex(prefix, x, len)                      \
+    do {                                                     \
+        if(debug) {                                          \
+            debug_printf("%s=", prefix);                     \
+            for (int i = 0; i < (int) len; i++) {            \
+                debug_printf("%02x ", ((uint8_t*)(x))[i]);   \
+            }                                                \
+            debug_printf("\n");                              \
+        }                                                    \
     } while (0)
 
 
