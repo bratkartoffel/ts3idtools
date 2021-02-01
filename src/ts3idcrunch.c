@@ -70,8 +70,8 @@ static void *stats_start(void *arg) {
     return NULL;
 }
 
-static void *worker_start_software(void *arg) {
-    debug_printf("> worker_start_software(%p)\n", arg);
+static void *worker_start_without_cpu_ext(void *arg) {
+    debug_printf("> worker_start_without_cpu_ext(%p)\n", arg);
     worker_settings *settings = arg;
     uint32_t first_block_state[5]  __attribute__((aligned (16)));
     do_sha1_first_block(settings->pubkey, first_block_state);
@@ -79,7 +79,7 @@ static void *worker_start_software(void *arg) {
     uint32_t hash[5];
     uint8_t level_bits_short_circuit =
             settings->level % 8 == 0 ? settings->level : settings->level - (settings->level % 8);
-    debug_printf("  worker_start_software: level_bits_short_circuit=%u\n", level_bits_short_circuit);
+    debug_printf("  worker_start_without_cpu_ext: level_bits_short_circuit=%u\n", level_bits_short_circuit);
     // no logging after this point, performance sensitive!
     while (!do_stop) {
         uint64_t value = atomic_fetch_add(&counter, settings->block_size);
@@ -103,12 +103,12 @@ static void *worker_start_software(void *arg) {
             }
         }
     }
-    debug_printf("< worker_start_software(): %p\n", NULL);
+    debug_printf("< worker_start_without_cpu_ext(): %p\n", NULL);
     return NULL;
 }
 
-static void *worker_start_cpu(void *arg) {
-    debug_printf("> worker_start_cpu(%p)\n", arg);
+static void *worker_start_with_cpu_ext(void *arg) {
+    debug_printf("> worker_start_with_cpu_ext(%p)\n", arg);
     worker_settings *settings = arg;
     uint32_t first_block_state[5]  __attribute__((aligned (16)));
     do_sha1_first_block(settings->pubkey, first_block_state);
@@ -116,7 +116,7 @@ static void *worker_start_cpu(void *arg) {
     uint32_t hash[5];
     uint8_t level_bits_short_circuit =
             settings->level % 8 == 0 ? settings->level : settings->level - (settings->level % 8);
-    debug_printf("  worker_start_cpu: level_bits_short_circuit=%u\n", level_bits_short_circuit);
+    debug_printf("  worker_start_with_cpu_ext: level_bits_short_circuit=%u\n", level_bits_short_circuit);
     // no logging after this point, performance sensitive!
     while (!do_stop) {
         uint64_t value = atomic_fetch_add(&counter, settings->block_size);
@@ -140,7 +140,7 @@ static void *worker_start_cpu(void *arg) {
             }
         }
     }
-    debug_printf("< worker_start_cpu(): %p\n", NULL);
+    debug_printf("< worker_start_with_cpu_ext(): %p\n", NULL);
     return NULL;
 }
 
@@ -238,9 +238,9 @@ static bool start_workers(uint8_t threads, worker_settings settings[threads],
     bool result = true;
     void *(*worker_func)(void *);
     if (check_for_intel_sha_extensions()) {
-        worker_func = worker_start_cpu;
+        worker_func = worker_start_with_cpu_ext;
     } else {
-        worker_func = worker_start_software;
+        worker_func = worker_start_without_cpu_ext;
     }
     for (uint8_t i = 0; i < threads; i++) {
         memset(&settings[i], 0x00, sizeof(struct worker_settings_t));
