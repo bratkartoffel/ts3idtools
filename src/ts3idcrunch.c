@@ -84,9 +84,19 @@ static void *worker_start_without_cpu_ext(void *arg) {
     while (!do_stop) {
         uint64_t value = atomic_fetch_add(&counter, settings->block_size);
         uint64_t bounds = value + settings->block_size;
+        size_t data_len = append_counter(settings->pubkey, pubkey_len, value);
+        if (data_len > 125) {
+            fprintf(stdout, "You've reached the end the calculating abilities of this tool.\n");
+            fprintf(stdout, "Continuing here makes no sense as the hashrate would halve.\n");
+            fprintf(stdout, "Abort computing process...\n");
+            do_stop = true;
+            if (settings->one_shot) {
+                pthread_mutex_unlock(&keypress_lock);
+                break;
+            }
+        }
         for (uint64_t i = value; i < bounds; i++) {
-            size_t data_len = append_counter(settings->pubkey, pubkey_len, i);
-            do_sha1_second_block_software(settings->pubkey, data_len, first_block_state, hash);
+            do_sha1_second_block_without_cpu_ext(settings->pubkey, data_len, first_block_state, hash);
             uint8_t calc_level = leading_zero_bits(hash, level_bits_short_circuit);
             if (calc_level >= settings->level) {
                 if (results[calc_level] == 0) {
@@ -101,6 +111,7 @@ static void *worker_start_without_cpu_ext(void *arg) {
                     break;
                 }
             }
+            data_len = increment_counter(settings->pubkey, pubkey_len, data_len);
         }
     }
     debug_printf("< worker_start_without_cpu_ext(): %p\n", NULL);
@@ -121,9 +132,19 @@ static void *worker_start_with_cpu_ext(void *arg) {
     while (!do_stop) {
         uint64_t value = atomic_fetch_add(&counter, settings->block_size);
         uint64_t bounds = value + settings->block_size;
+        size_t data_len = append_counter(settings->pubkey, pubkey_len, value);
+        if (data_len > 125) {
+            fprintf(stdout, "You've reached the end the calculating abilities of this tool.\n");
+            fprintf(stdout, "Continuing here makes no sense as the hashrate would halve.\n");
+            fprintf(stdout, "Abort computing process...\n");
+            do_stop = true;
+            if (settings->one_shot) {
+                pthread_mutex_unlock(&keypress_lock);
+                break;
+            }
+        }
         for (uint64_t i = value; i < bounds; i++) {
-            size_t data_len = append_counter(settings->pubkey, pubkey_len, i);
-            do_sha1_second_block_cpu(settings->pubkey, data_len, first_block_state, hash);
+            do_sha1_second_block_with_cpu_ext(settings->pubkey, data_len, first_block_state, hash);
             uint8_t calc_level = leading_zero_bits(hash, level_bits_short_circuit);
             if (calc_level >= settings->level) {
                 if (results[calc_level] == 0) {
@@ -138,6 +159,7 @@ static void *worker_start_with_cpu_ext(void *arg) {
                     break;
                 }
             }
+            data_len = increment_counter(settings->pubkey, pubkey_len, data_len);
         }
     }
     debug_printf("< worker_start_with_cpu_ext(): %p\n", NULL);

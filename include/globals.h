@@ -48,6 +48,8 @@ uint8_t leading_zero_bits(const uint32_t hash[5], uint8_t min_level);
 
 size_t append_counter(uint8_t data[128], size_t length, uint64_t value);
 
+size_t increment_counter(uint8_t data[128], size_t pubkey_length, size_t complete_length);
+
 bool ts3_xor(size_t a_len, const uint8_t *a, int aoffs,
              size_t b_len, const uint8_t *b, int boffs,
              size_t len,

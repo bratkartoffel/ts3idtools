@@ -57,6 +57,22 @@ size_t append_counter(uint8_t data[128], size_t length, uint64_t value) {
     return result + length;
 }
 
+size_t increment_counter(uint8_t data[128], size_t pubkey_length, size_t complete_length) {
+    uint8_t *start_counter = data + pubkey_length;
+    uint8_t *end_counter = data + complete_length;
+    for (uint8_t *pos = end_counter - 1; pos >= start_counter; pos--) {
+        if (*pos < '9') {
+            *pos = *pos + 1;
+            return complete_length;
+        } else {
+            *pos = '0';
+        }
+    }
+    *start_counter = '1';
+    *end_counter = '0';
+    return complete_length + 1;
+}
+
 uint8_t get_security_level(const char *pubkey, uint64_t counter) {
     debug_printf("> get_security_level(%s, %" PRIu64 ")\n",
                  pubkey, counter);
