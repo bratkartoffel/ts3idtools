@@ -8,6 +8,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 * Build: Use cmake module for upx
+* ts3idcrunch: Enhance incrementing the counter (~10% hashrate improvement)
+* ts3idcrunch: Add support for longer counters
 
 ## [v1.0.1] - 2020-01-30
 
