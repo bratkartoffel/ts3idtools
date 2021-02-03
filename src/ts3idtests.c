@@ -119,7 +119,7 @@ void testOneCrunchRound() {
     debug_print_hex("state", state, SHA_DIGEST_LENGTH);
     do_sha1_second_block_without_cpu_ext(pubkey, len, state, hash);
     debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
-    uint8_t level = leading_zero_bits(hash, 0);
+    uint8_t level = leading_zero_bits(hash);
 
     debug_printf("level=%u\n", level);
     assert(level == 37);
@@ -129,7 +129,7 @@ void testLeadingZeroBitsSkipSmaller8() {
     fprintf(stderr, "Starting %s\n", __func__);
     uint32_t hash[5] = {0x80FFFFFF};
     debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
-    uint8_t bits = leading_zero_bits(hash, 0);
+    uint8_t bits = leading_zero_bits(hash);
     debug_printf("bits=%u\n", bits);
     assert(bits == 0);
 }
@@ -138,7 +138,7 @@ void testLeadingZeroBits9() {
     fprintf(stderr, "Starting %s\n", __func__);
     uint32_t hash[5] = {0x00FEFFFF};
     debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
-    uint8_t bits = leading_zero_bits(hash, 0);
+    uint8_t bits = leading_zero_bits(hash);
     debug_printf("bits=%u\n", bits);
     assert(bits == 9);
 }
@@ -147,7 +147,7 @@ void testLeadingZeroBits160() {
     fprintf(stderr, "Starting %s\n", __func__);
     uint32_t hash[5] = {0};
     debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
-    uint8_t bits = leading_zero_bits(hash, 0);
+    uint8_t bits = leading_zero_bits(hash);
     debug_printf("bits=%u\n", bits);
     assert(bits == 160);
 }

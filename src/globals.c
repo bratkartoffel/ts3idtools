@@ -94,12 +94,12 @@ uint8_t get_security_level(const char *pubkey, uint64_t counter) {
             hash[16] << 24 | hash[17] << 16 | hash[18] << 8 | hash[19]
     };
     debug_print_hex("  get_security_level: state", hash, SHA_DIGEST_LENGTH);
-    uint8_t result = leading_zero_bits(state, 0);
+    uint8_t result = leading_zero_bits(state);
     debug_printf("< get_security_level(): %u\n", result);
     return result;
 }
 
-uint8_t leading_zero_bits(const uint32_t hash[5], uint8_t min_level) {
+uint8_t leading_zero_bits(const uint32_t hash[5]) {
     // no debug logging, extremely performance sensitive!
 
 #define check_partial_byte(x)                     \

@@ -77,9 +77,6 @@ static void *worker_start_without_cpu_ext(void *arg) {
     do_sha1_first_block(settings->pubkey, first_block_state);
     size_t pubkey_len = settings->pubkey_len;
     uint32_t hash[5];
-    uint8_t level_bits_short_circuit =
-            settings->level % 8 == 0 ? settings->level : settings->level - (settings->level % 8);
-    debug_printf("  worker_start_without_cpu_ext: level_bits_short_circuit=%u\n", level_bits_short_circuit);
     // no logging after this point, performance sensitive!
     while (!do_stop) {
         uint64_t value = atomic_fetch_add(&counter, settings->block_size);
@@ -97,7 +94,7 @@ static void *worker_start_without_cpu_ext(void *arg) {
         }
         for (uint64_t i = value; i < bounds; i++) {
             do_sha1_second_block_without_cpu_ext(settings->pubkey, data_len, first_block_state, hash);
-            uint8_t calc_level = leading_zero_bits(hash, level_bits_short_circuit);
+            uint8_t calc_level = leading_zero_bits(hash);
             if (calc_level >= settings->level) {
                 if (results[calc_level] == 0) {
                     printf("Thread[%u]: Found level=%u with counter %" PRIu64 "!\n",
@@ -125,9 +122,6 @@ static void *worker_start_with_cpu_ext(void *arg) {
     do_sha1_first_block(settings->pubkey, first_block_state);
     size_t pubkey_len = settings->pubkey_len;
     uint32_t hash[5];
-    uint8_t level_bits_short_circuit =
-            settings->level % 8 == 0 ? settings->level : settings->level - (settings->level % 8);
-    debug_printf("  worker_start_with_cpu_ext: level_bits_short_circuit=%u\n", level_bits_short_circuit);
     // no logging after this point, performance sensitive!
     while (!do_stop) {
         uint64_t value = atomic_fetch_add(&counter, settings->block_size);
@@ -145,7 +139,7 @@ static void *worker_start_with_cpu_ext(void *arg) {
         }
         for (uint64_t i = value; i < bounds; i++) {
             do_sha1_second_block_with_cpu_ext(settings->pubkey, data_len, first_block_state, hash);
-            uint8_t calc_level = leading_zero_bits(hash, level_bits_short_circuit);
+            uint8_t calc_level = leading_zero_bits(hash);
             if (calc_level >= settings->level) {
                 if (results[calc_level] == 0) {
                     printf("Thread[%u]: Found level=%u with counter %" PRIu64 "!\n",

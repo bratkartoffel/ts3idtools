@@ -176,7 +176,7 @@ static uint64_t increase_level_to_min(size_t pubkey_len, uint8_t *pubkey) {
         counter++;
         size_t data_len = append_counter(pubkey, pubkey_len, counter);
         do_sha1_second_block_without_cpu_ext(pubkey, data_len, state, hash);
-        level = leading_zero_bits(hash, 0);
+        level = leading_zero_bits(hash);
         debug_printf("  increase_level_to_min: counter=%" PRIu64 ", level=%u\n", counter, level);
     } while (level < 8);
 

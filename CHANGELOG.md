@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+* all: Remove unsed parameter
+
+## [v1.0.3] - 2020-02-04
+
 * ts3idcruch: Fix wrong level calculation
 * ts3idcrunch: Enhance performance by another 5%
 
@@ -26,7 +30,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 * Initial release
 
-[Unreleased]:  https://github.com/bratkartoffel/ts3idtools/compare/v1.0.2...HEAD
+[Unreleased]:  https://github.com/bratkartoffel/ts3idtools/compare/v1.0.3...HEAD
+
+[v1.0.3]:      https://github.com/bratkartoffel/ts3idtools/compare/v1.0.2...v1.0.3
 
 [v1.0.2]:      https://github.com/bratkartoffel/ts3idtools/compare/v1.0.1...v1.0.2
 

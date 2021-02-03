@@ -44,7 +44,7 @@ extern bool debug;
 
 uint8_t get_security_level(const char *pubkey, uint64_t counter);
 
-uint8_t leading_zero_bits(const uint32_t hash[5], uint8_t min_level);
+uint8_t leading_zero_bits(const uint32_t hash[5]);
 
 size_t append_counter(uint8_t data[128], size_t length, uint64_t value);
 
