@@ -22,9 +22,9 @@ void testSha1SingleRound() {
             2727190866
     };
 
-    debug_print_hex("expected", expected, 20);
-    debug_print_hex("  actual", state, 20);
-    assert(memcmp(state, expected, 20) == 0);
+    debug_print_hex("expected", expected, SHA_DIGEST_LENGTH);
+    debug_print_hex("  actual", state, SHA_DIGEST_LENGTH);
+    assert(memcmp(state, expected, SHA_DIGEST_LENGTH) == 0);
 }
 
 void testAppendCounter() {
@@ -78,9 +78,9 @@ void testSha1SameResults() {
     do_sha1_second_block_without_cpu_ext(data, 6, state, hashWithoutCpuExt);
     do_sha1_second_block_with_cpu_ext(data, 6, state, hashWithCpuExt);
 
-    debug_print_hex("software", hashWithoutCpuExt, 20);
-    debug_print_hex("     cpu", hashWithCpuExt, 20);
-    assert(memcmp(hashWithoutCpuExt, hashWithCpuExt, 20) == 0);
+    debug_print_hex("software", hashWithoutCpuExt, SHA_DIGEST_LENGTH);
+    debug_print_hex("     cpu", hashWithCpuExt, SHA_DIGEST_LENGTH);
+    assert(memcmp(hashWithoutCpuExt, hashWithCpuExt, SHA_DIGEST_LENGTH) == 0);
 }
 
 void testGetSecurityLevel() {
@@ -89,16 +89,67 @@ void testGetSecurityLevel() {
             "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=",
             351);
 
-    debug_print_hex("level", &level, 1);
+    debug_printf("level=%u\n", level);
     assert(level == 8);
 }
 
-void testLeadingZeroBits() {
+void testGetSecurityLevelOver32() {
     fprintf(stderr, "Starting %s\n", __func__);
-    uint32_t hash[5] = {0xFE}; // big-endian!
+    uint8_t level = get_security_level(
+            "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=",
+            22023984812);
+
+    debug_printf("level=%u\n", level);
+    assert(level == 37);
+}
+
+void testOneCrunchRound() {
+    fprintf(stderr, "Starting %s\n", __func__);
+    uint64_t counter = 22023984812;
+    uint8_t pubkey[128] = {0};
+    size_t len = 104;
+    uint32_t state[5] = {0};
+    uint32_t hash[5] = {0};
+    strncpy((char *) pubkey,
+            "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=",
+            len + 1);
+    len = append_counter(pubkey, len, counter);
+    debug_print_hex("data", pubkey, len);
+    do_sha1_first_block(pubkey, state);
+    debug_print_hex("state", state, SHA_DIGEST_LENGTH);
+    do_sha1_second_block_without_cpu_ext(pubkey, len, state, hash);
+    debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
+    uint8_t level = leading_zero_bits(hash, 0);
+
+    debug_printf("level=%u\n", level);
+    assert(level == 37);
+}
+
+void testLeadingZeroBitsSkipSmaller8() {
+    fprintf(stderr, "Starting %s\n", __func__);
+    uint32_t hash[5] = {0x80FFFFFF};
+    debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
     uint8_t bits = leading_zero_bits(hash, 0);
-    debug_print_hex("bits", &bits, 1);
-    assert(bits == 1);
+    debug_printf("bits=%u\n", bits);
+    assert(bits == 0);
+}
+
+void testLeadingZeroBits9() {
+    fprintf(stderr, "Starting %s\n", __func__);
+    uint32_t hash[5] = {0x00FEFFFF};
+    debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
+    uint8_t bits = leading_zero_bits(hash, 0);
+    debug_printf("bits=%u\n", bits);
+    assert(bits == 9);
+}
+
+void testLeadingZeroBits160() {
+    fprintf(stderr, "Starting %s\n", __func__);
+    uint32_t hash[5] = {0};
+    debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
+    uint8_t bits = leading_zero_bits(hash, 0);
+    debug_printf("bits=%u\n", bits);
+    assert(bits == 160);
 }
 
 int main(int argc, const char **argv) {
@@ -112,6 +163,10 @@ int main(int argc, const char **argv) {
     testIncrementCounterNewDigit();
     testSha1SameResults();
     testGetSecurityLevel();
-    testLeadingZeroBits();
+    testGetSecurityLevelOver32();
+    testLeadingZeroBitsSkipSmaller8();
+    testLeadingZeroBits9();
+    testLeadingZeroBits160();
+    testOneCrunchRound();
     return 0;
 }

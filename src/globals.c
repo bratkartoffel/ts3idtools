@@ -85,14 +85,15 @@ uint8_t get_security_level(const char *pubkey, uint64_t counter) {
     uint8_t hash[SHA_DIGEST_LENGTH];
     EVP_DigestFinal(ctx, hash, NULL);
     EVP_MD_CTX_free(ctx);
-    uint32_t state[5];
     // store as big-endian
-    state[0] = hash[3] << 24 | hash[2] << 16 | hash[1] << 8 | hash[0];
-    state[1] = hash[7] << 24 | hash[6] << 16 | hash[5] << 8 | hash[4];
-    state[2] = hash[11] << 24 | hash[10] << 16 | hash[9] << 8 | hash[8];
-    state[3] = hash[15] << 24 | hash[14] << 16 | hash[13] << 8 | hash[12];
-    state[4] = hash[19] << 24 | hash[18] << 16 | hash[17] << 8 | hash[16];
-    debug_print_hex("  get_security_level: state", state, 20);
+    uint32_t state[5] = {
+            hash[0] << 24 | hash[1] << 16 | hash[2] << 8 | hash[3],
+            hash[4] << 24 | hash[5] << 16 | hash[6] << 8 | hash[7],
+            hash[8] << 24 | hash[9] << 16 | hash[10] << 8 | hash[11],
+            hash[12] << 24 | hash[13] << 16 | hash[14] << 8 | hash[15],
+            hash[16] << 24 | hash[17] << 16 | hash[18] << 8 | hash[19]
+    };
+    debug_print_hex("  get_security_level: state", hash, SHA_DIGEST_LENGTH);
     uint8_t result = leading_zero_bits(state, 0);
     debug_printf("< get_security_level(): %u\n", result);
     return result;
@@ -100,20 +101,49 @@ uint8_t get_security_level(const char *pubkey, uint64_t counter) {
 
 uint8_t leading_zero_bits(const uint32_t hash[5], uint8_t min_level) {
     // no debug logging, extremely performance sensitive!
+
+#define check_partial_byte(x)                     \
+    do {                                          \
+        if ((h[x] & 0x7F) == 0) return curr + 7;  \
+        if ((h[x] & 0x3F) == 0) return curr + 6;  \
+        if ((h[x] & 0x1F) == 0) return curr + 5;  \
+        if ((h[x] & 0x0F) == 0) return curr + 4;  \
+        if ((h[x] & 0x07) == 0) return curr + 3;  \
+        if ((h[x] & 0x03) == 0) return curr + 2;  \
+        if ((h[x] & 0x01) == 0) return curr + 1;  \
+        return curr;                              \
+    } while(0)
+
+    uint8_t *h = (uint8_t *) hash;
     uint8_t curr = 0;
-    int i;
-    for (i = 0; i < 5; i++) {
-        if (hash[i] == 0) curr += 32;
-        else break;
-    }
-    // short circuit for low levels
-    if (curr < min_level) return curr;
-    if (i < 5) {
-        for (int bit = 0; bit < 32; bit++) {
-            if ((hash[i] & (1 << bit)) == 0) curr++;
-            else break;
-        }
-    }
+
+    if (h[3] == 0) curr += 8; else return 0;
+    if (h[2] == 0) curr += 8; else check_partial_byte(2);
+    if (h[1] == 0) curr += 8; else check_partial_byte(1);
+    if (h[0] == 0) curr += 8; else check_partial_byte(0);
+
+    if (h[7] == 0) curr += 8; else check_partial_byte(7);
+    if (h[6] == 0) curr += 8; else check_partial_byte(6);
+    if (h[5] == 0) curr += 8; else check_partial_byte(5);
+    if (h[4] == 0) curr += 8; else check_partial_byte(4);
+
+    if (h[11] == 0) curr += 8; else check_partial_byte(11);
+    if (h[10] == 0) curr += 8; else check_partial_byte(10);
+    if (h[9] == 0) curr += 8; else check_partial_byte(9);
+    if (h[8] == 0) curr += 8; else check_partial_byte(8);
+
+    if (h[15] == 0) curr += 8; else check_partial_byte(15);
+    if (h[14] == 0) curr += 8; else check_partial_byte(14);
+    if (h[13] == 0) curr += 8; else check_partial_byte(13);
+    if (h[12] == 0) curr += 8; else check_partial_byte(12);
+
+    if (h[19] == 0) curr += 8; else check_partial_byte(19);
+    if (h[18] == 0) curr += 8; else check_partial_byte(18);
+    if (h[17] == 0) curr += 8; else check_partial_byte(17);
+    if (h[16] == 0) curr += 8; else check_partial_byte(16);
+
+#undef check_partial_byte
+
     return curr;
 }
 
@@ -270,7 +300,7 @@ void create_uuid(size_t pubkey_len, const unsigned char pubkey[pubkey_len],
     EVP_DigestUpdate(&ctx, pubkey, pubkey_len);
     EVP_DigestFinal(&ctx, hash, NULL);
     debug_print_hex("  create_uuid: hash", hash, SHA_DIGEST_LENGTH);
-    base64_encode(20, hash, uuid_len, uuid);
+    base64_encode(SHA_DIGEST_LENGTH, hash, uuid_len, uuid);
     debug_printf("< create_uuid(-, -, %" PRIu64 ", -)\n", *uuid_len);
 }
 
