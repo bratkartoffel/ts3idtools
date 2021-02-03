@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+* ts3idcruch: Fix wrong level calculation
+* ts3idcrunch: Enhance performance by another 5%
+
 ## [v1.0.2] - 2020-02-01
 
 * Build: Use cmake module for upx

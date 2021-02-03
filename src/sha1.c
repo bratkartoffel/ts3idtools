@@ -11,7 +11,14 @@ void do_sha1_first_block(uint8_t data[128], uint32_t state[5]) {
     state[2] = 0x98BADCFE;
     state[3] = 0x10325476;
     state[4] = 0xC3D2E1F0;
+
     sha1_compress_software(state, data);
+#if 0
+    // for debugging / verifying optimizations
+    debug_printf("===========================\n");
+    debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
+    debug_printf("===========================\n");
+#endif
 }
 
 void do_sha1_second_block_without_cpu_ext(uint8_t data[128], size_t len, const uint32_t state[5], uint32_t hash[5]) {
@@ -24,12 +31,7 @@ void do_sha1_second_block_without_cpu_ext(uint8_t data[128], size_t len, const u
     block[62] = len >> 8;
     block[63] = len & 0xFF;
 
-    hash[0] = state[0];
-    hash[1] = state[1];
-    hash[2] = state[2];
-    hash[3] = state[3];
-    hash[4] = state[4];
-
+    memcpy(hash, state, SHA_DIGEST_LENGTH);
     sha1_compress_software(hash, block);
 #if 0
     // for debugging / verifying optimizations
@@ -49,12 +51,7 @@ void do_sha1_second_block_with_cpu_ext(uint8_t data[128], size_t len, const uint
     block[62] = len >> 8;
     block[63] = len & 0xFF;
 
-    hash[0] = state[0];
-    hash[1] = state[1];
-    hash[2] = state[2];
-    hash[3] = state[3];
-    hash[4] = state[4];
-
+    memcpy(hash, state, SHA_DIGEST_LENGTH);
     sha1_compress_cpu(hash, block);
 #if 0
     // for debugging / verifying optimizations
