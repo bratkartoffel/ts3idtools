@@ -140,11 +140,18 @@ static bool obfuscate_key(size_t privkey_len, uint8_t privkey[privkey_len]) {
         }
         debug_printf("  obfuscate_key: nullIndex=%d\n", nullIndex);
 
-        EVP_MD_CTX ctx;
+        EVP_MD_CTX *ctx;
+        ctx = EVP_MD_CTX_new();
+        if (ctx == NULL) {
+            fprintf(stderr, "EVP_MD_CTX_new() failed\n");
+            return false;
+        }
+
         const EVP_MD *md = EVP_sha1();
-        EVP_DigestInit(&ctx, md);
-        EVP_DigestUpdate(&ctx, buffer + 20, nullIndex < 0 ? (int) privkey_len - 20 : nullIndex);
-        EVP_DigestFinal(&ctx, identityHash, NULL);
+        EVP_DigestInit(ctx, md);
+        EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int) privkey_len - 20 : nullIndex);
+        EVP_DigestFinal(ctx, identityHash, NULL);
+        EVP_MD_CTX_free(ctx);
         debug_print_hex("  obfuscate_key: identityHash", identityHash, SHA_DIGEST_LENGTH);
     }
 
@@ -195,7 +202,7 @@ int main(int argc, const char *const *argv) {
             {"nickname", required_argument, 0, 'n'},
             {"output",   required_argument, 0, 'o'},
             {"verbose",  no_argument,       0, 'v'},
-            {0,          0,                 0, 0}
+            {0, 0,                          0, 0}
     };
     bool missing_value = false;
     int c;

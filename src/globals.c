@@ -294,11 +294,17 @@ void create_uuid(size_t pubkey_len, const unsigned char pubkey[pubkey_len],
     debug_printf("> create_uuid(%" PRIu64 ", %p, %" PRIu64 ", %p)\n",
                  pubkey_len, pubkey, *uuid_len, uuid);
     uint8_t hash[SHA_DIGEST_LENGTH];
-    EVP_MD_CTX ctx;
+    EVP_MD_CTX *ctx;
+    ctx = EVP_MD_CTX_new();
+    if (ctx == NULL) {
+        fprintf(stderr, "EVP_MD_CTX_new() failed\n");
+        return;
+    }
     const EVP_MD *md = EVP_sha1();
-    EVP_DigestInit(&ctx, md);
-    EVP_DigestUpdate(&ctx, pubkey, pubkey_len);
-    EVP_DigestFinal(&ctx, hash, NULL);
+    EVP_DigestInit(ctx, md);
+    EVP_DigestUpdate(ctx, pubkey, pubkey_len);
+    EVP_DigestFinal(ctx, hash, NULL);
+    EVP_MD_CTX_free(ctx);
     debug_print_hex("  create_uuid: hash", hash, SHA_DIGEST_LENGTH);
     base64_encode(SHA_DIGEST_LENGTH, hash, uuid_len, uuid);
     debug_printf("< create_uuid(-, -, %" PRIu64 ", -)\n", *uuid_len);

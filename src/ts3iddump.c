@@ -37,7 +37,7 @@ static bool asn1_parse_integer(const unsigned char **asn1data_pos, long length, 
     }
     if (result) {
         ASN1_INTEGER *temp = ASN1_INTEGER_new();
-        if (!c2i_ASN1_INTEGER(&temp, asn1data_pos, len)) {
+        if (!d2i_ASN1_INTEGER(&temp, asn1data_pos, len)) {
             fprintf(stderr, "d2i_ASN1_INTEGER() failed\n");
             result = false;
         }
@@ -77,7 +77,7 @@ static bool asn1_parse(size_t asn1data_len, const uint8_t asn1data[asn1data_len]
         return false;
     }
     ASN1_BIT_STRING *temp = ASN1_BIT_STRING_new();
-    if (!c2i_ASN1_BIT_STRING(&temp, &asn1data_pos, len)) {
+    if (!d2i_ASN1_BIT_STRING(&temp, &asn1data_pos, len)) {
         fprintf(stderr, "d2i_ASN1_INTEGER() failed\n");
         return false;
     }
@@ -136,11 +136,17 @@ static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identi
         }
         debug_printf("  deobfuscate_key: nullIndex=%d\n", nullIndex);
 
-        EVP_MD_CTX ctx;
+        EVP_MD_CTX *ctx;
+        ctx = EVP_MD_CTX_new();
+        if (ctx == NULL) {
+            fprintf(stderr, "EVP_MD_CTX_new() failed\n");
+            return false;
+        }
         const EVP_MD *md = EVP_sha1();
-        EVP_DigestInit(&ctx, md);
-        EVP_DigestUpdate(&ctx, buffer + 20, nullIndex < 0 ? (int) identityData_len - 20 : nullIndex);
-        EVP_DigestFinal(&ctx, identityHash, NULL);
+        EVP_DigestInit(ctx, md);
+        EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int) identityData_len - 20 : nullIndex);
+        EVP_DigestFinal(ctx, identityHash, NULL);
+        EVP_MD_CTX_free(ctx);
         debug_print_hex("  deobfuscate_key: identityHash", identityHash, SHA_DIGEST_LENGTH);
     }
 

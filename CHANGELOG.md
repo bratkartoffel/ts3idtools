@@ -7,7 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-* all: Remove unsed parameter
+* all: Remove unused parameter
+* all: upgrade to libressl 3.7.2
 
 ## [v1.0.3] - 2020-02-04
 
