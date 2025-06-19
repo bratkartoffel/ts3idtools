@@ -8,7 +8,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 * all: Remove unused parameter
-* all: upgrade to libressl 3.7.2
+* all: upgrade to libressl 4.1.0
 * ts3iddump: fix debug logs
 
 ## [v1.0.3] - 2020-02-04
