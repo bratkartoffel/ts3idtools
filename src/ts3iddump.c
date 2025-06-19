@@ -54,7 +54,7 @@ static bool asn1_parse(size_t asn1data_len, const uint8_t asn1data[asn1data_len]
     debug_printf("> asn1_parse(%" PRIu64 ", %p, %p, %p, %p)\n",
                  asn1data_len, asn1data, (void *) x, (void *) y, (void *) z);
     const unsigned char *asn1data_pos = asn1data;
-    long len, length = asn1data_len;
+    long len, length = (long) asn1data_len;
     int tag, xclass, ret;
     // SEQUENCE
     ret = ASN1_get_object(&asn1data_pos, &len, &tag, &xclass, length);
@@ -78,16 +78,33 @@ static bool asn1_parse(size_t asn1data_len, const uint8_t asn1data[asn1data_len]
     }
     ASN1_BIT_STRING *temp = ASN1_BIT_STRING_new();
     if (!d2i_ASN1_BIT_STRING(&temp, &asn1data_pos, len)) {
-        fprintf(stderr, "d2i_ASN1_INTEGER() failed\n");
+        fprintf(stderr, "d2i_ASN1_BIT_STRING() failed\n");
         return false;
     }
     ASN1_BIT_STRING_free(temp);
 
     BIGNUM *ignored = BN_new();
-    asn1_parse_integer(&asn1data_pos, length, ignored);
-    asn1_parse_integer(&asn1data_pos, length, x);
-    asn1_parse_integer(&asn1data_pos, length, y);
-    asn1_parse_integer(&asn1data_pos, length, z);
+    if (!asn1_parse_integer(&asn1data_pos, length, ignored))
+    {
+        fprintf(stderr, "asn1_parse_integer(ignored) failed\n");
+        BN_free(ignored);
+        return false;
+    }
+    if (!asn1_parse_integer(&asn1data_pos, length, x))
+    {
+        fprintf(stderr, "asn1_parse_integer(x) failed\n");
+        return false;
+    }
+    if (!asn1_parse_integer(&asn1data_pos, length, y))
+    {
+        fprintf(stderr, "asn1_parse_integer(y) failed\n");
+        return false;
+    }
+    if (!asn1_parse_integer(&asn1data_pos, length, z))
+    {
+        fprintf(stderr, "asn1_parse_integer(z) failed\n");
+        return false;
+    }
 
     // sanity check, everything parsed?
     if (*asn1data_pos != 0) {
