@@ -6,6 +6,8 @@
 #include <openssl/evp.h>
 #include <stdio.h>
 
+#include "openssl/err.h"
+
 static void print_usage(const char *name) {
     printf("Usage: %s [options]\n"
            "Options:\n"
@@ -24,26 +26,13 @@ static bool asn1_parse_integer(const unsigned char **asn1data_pos, long length, 
     debug_printf("> asn1_parse_integer(%p, %li, %p)\n",
                  (void *) asn1data_pos, length, (void *) bn_result);
     bool result = true;
-    long len;
-    int ret, tag, xclass;
-    ret = ASN1_get_object(asn1data_pos, &len, &tag, &xclass, length);
-    if (ret & 0x80) {
-        fprintf(stderr, "ASN1_get_object() failed\n");
+    ASN1_INTEGER *temp = ASN1_INTEGER_new();
+    if (!d2i_ASN1_INTEGER(&temp, asn1data_pos, length)) {
+        fprintf(stderr, "d2i_ASN1_INTEGER() failed\n");
         result = false;
     }
-    if (tag != V_ASN1_INTEGER) {
-        fprintf(stderr, "Invalid tag for ASN1: %d (%s)\n", tag, ASN1_tag2str(tag));
-        result = false;
-    }
-    if (result) {
-        ASN1_INTEGER *temp = ASN1_INTEGER_new();
-        if (!d2i_ASN1_INTEGER(&temp, asn1data_pos, len)) {
-            fprintf(stderr, "d2i_ASN1_INTEGER() failed\n");
-            result = false;
-        }
-        ASN1_INTEGER_to_BN(temp, bn_result);
-        ASN1_INTEGER_free(temp);
-    }
+    ASN1_INTEGER_to_BN(temp, bn_result);
+    ASN1_INTEGER_free(temp);
 
     debug_printf("< asn1_parse_integer(): %u\n", result);
     return result;
@@ -67,17 +56,8 @@ static bool asn1_parse(size_t asn1data_len, const uint8_t asn1data[asn1data_len]
         return false;
     }
     // BIT_STRING -- bitInfo, ignored for now
-    ret = ASN1_get_object(&asn1data_pos, &len, &tag, &xclass, length);
-    if (ret & 0x80) {
-        fprintf(stderr, "ASN1_get_object() failed\n");
-        return false;
-    }
-    if (tag != V_ASN1_BIT_STRING) {
-        fprintf(stderr, "(2) Invalid tag for ASN1: %d: %s\n", tag, ASN1_tag2str(tag));
-        return false;
-    }
     ASN1_BIT_STRING *temp = ASN1_BIT_STRING_new();
-    if (!d2i_ASN1_BIT_STRING(&temp, &asn1data_pos, len)) {
+    if (!d2i_ASN1_BIT_STRING(&temp, &asn1data_pos, length)) {
         fprintf(stderr, "d2i_ASN1_BIT_STRING() failed\n");
         return false;
     }
@@ -307,13 +287,20 @@ int main(int argc, const char *const *argv) {
         fprintf(stderr, "base64_decode() failed\n");
         return 1;
     }
-    debug_print_hex("  main: asn1 data", identityData, identityData_len);
+    debug_print_hex("  main: asn1 data", asn1data, asn1data_len);
 
     BIGNUM *x = BN_new();
     BIGNUM *y = BN_new();
     BIGNUM *z = BN_new();
     if (!asn1_parse(asn1data_len, asn1data, x, y, z)) {
         fprintf(stderr, "asn1_parse() failed\n");
+        unsigned long code;
+        while ((code = ERR_get_error()))
+        {
+            char message[1024];
+            ERR_error_string_n(code, message, sizeof(message));
+            fprintf(stderr, "> %s\n", message);
+        }
         return 1;
     }
 

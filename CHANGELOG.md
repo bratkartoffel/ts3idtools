@@ -9,6 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 * all: Remove unused parameter
 * all: upgrade to libressl 3.7.2
+* ts3iddump: fix debug logs
 
 ## [v1.0.3] - 2020-02-04
 
@@ -32,11 +33,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * Initial release
 
 [Unreleased]:  https://github.com/bratkartoffel/ts3idtools/compare/v1.0.3...HEAD
-
 [v1.0.3]:      https://github.com/bratkartoffel/ts3idtools/compare/v1.0.2...v1.0.3
-
 [v1.0.2]:      https://github.com/bratkartoffel/ts3idtools/compare/v1.0.1...v1.0.2
-
 [v1.0.1]:      https://github.com/bratkartoffel/ts3idtools/compare/v1.0.0...v1.0.1
-
 [v1.0.0]:      https://github.com/bratkartoffel/ts3idtools/releases/tag/v1.0.0
+
