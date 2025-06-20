@@ -1,19 +1,31 @@
-#!/bin/sh
-set -e
+#!/bin/bash
 
-exe=$1
-rounds=$2
-if [ -z "$exe" ]; then exe=./ts3idcrunch; fi
-if [ -z "$rounds" ]; then rounds=25; fi
+readonly exe=$1
 
-sum=0
-for i in $(seq 1 $rounds); do
-  perf=$($exe --blocksize=22 --counter=10799000000000 \
-    --publickey=MEwDAgcAAgEgAiEAyKQZKU/Sr2mZtT0T/R6g/BcnfU4vsgT2BfsZiwBrv60CIEpfLzajVLJtTzJwSINdUL0/AKriXwav1ffrymdHUmDC \
-    --level=30 --threads=4 --one-shot | egrep '^Performance' | awk '{print $2}')
-  sum=$(echo "$sum + $perf" | bc)
-  echo "Round $i: $perf mh/s"
+readonly count_rounds=20
+readonly duration=10
+readonly count_threads=14
+readonly pubkey=MEsDAgcAAgEgAiA0jNBZiv2DHBIJw+dwExW/pBZNoJMDXsTmdTjN3/19jQIgPq1I1CLck2vf8a2FfvLaO2C0ocxhUWNqPedG5nVHW3o=
+
+for threads in $(seq 1 $count_threads); do
+  sum=0
+  for round in $(seq 1 $count_rounds); do
+    perf=$(
+    timeout -s SIGINT $duration \
+      "$exe" \
+        -t "$threads" \
+        -p "$pubkey" \
+        -l 64 \
+        -b 23 \
+        -c 100000000000000 \
+          | grep -E "^Performance" \
+          | awk '{print $2}'
+    )
+    sum=$(echo "$sum + $perf" | bc)
+    echo "$threads threads, round $round: $perf mh/s"
+  done
+
+  avg=$(echo "scale=2; $sum / $count_rounds" | bc)
+  avg2=$(echo "scale=2; $sum / $count_rounds / $threads" | bc)
+  echo "$threads threads average: $avg mh/s ($avg2 mh/s per thread)"
 done
-
-avg=$(echo "scale=2; $sum / $rounds" | bc)
-echo "Average: $avg mh/s"

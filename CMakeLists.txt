@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.10)
 project(ts3idtools)
 
 set(CMAKE_C_STANDARD 23)
@@ -6,11 +6,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msha -msse4 -D_GNU_SOURCE")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -Wl,-s")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -O0")
 if (NOT WIN32 AND NOT APPLE)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
-    set(CMAKE_AR "gcc-ar")
-    set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
-    set(CMAKE_C_ARCHIVE_FINISH true)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif ()
 if (NOT APPLE)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
@@ -35,7 +31,7 @@ add_executable(${PROJECT_NAME}
         src/base64.c
         src/ts3idcrunch.c
         src/sha1.c
-        )
+)
 include(common.cmake)
 
 # ----- id dumper to print out information about exported identities -----
@@ -44,7 +40,7 @@ add_executable(${PROJECT_NAME}
         src/globals.c
         src/base64.c
         src/ts3iddump.c
-        )
+)
 include(common.cmake)
 
 # ----- id generator for new identities -----
@@ -54,7 +50,7 @@ add_executable(${PROJECT_NAME}
         src/base64.c
         src/ts3idgen.c
         src/sha1.c
-        )
+)
 include(common.cmake)
 
 # ----- testapp for crunching -----
@@ -64,5 +60,5 @@ add_executable(${PROJECT_NAME}
         src/base64.c
         src/ts3idtests.c
         src/sha1.c
-        )
+)
 include(common.cmake)

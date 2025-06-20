@@ -3,6 +3,7 @@
 #endif
 
 #include <assert.h>
+#include <string.h>
 
 #include "globals.h"
 #include "sha1.h"
@@ -15,11 +16,11 @@ void testSha1SingleRound() {
     do_sha1_first_block(data, state);
 
     uint32_t expected[5] = {
-            4156553573,
-            2192141954,
-            2271538046,
-            2679903082,
-            2727190866
+            0xF7BFF965,
+            0x82A96E82,
+            0x8764EB7E,
+            0x9FBC136A,
+            0xA28DA152
     };
 
     debug_print_hex("expected", expected, SHA_DIGEST_LENGTH);
@@ -136,7 +137,7 @@ void testLeadingZeroBitsSkipSmaller8() {
 
 void testLeadingZeroBits9() {
     fprintf(stderr, "Starting %s\n", __func__);
-    uint32_t hash[5] = {0x00FEFFFF};
+    uint32_t hash[5] = {0xFFFFFE00};
     debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
     uint8_t bits = leading_zero_bits(hash);
     debug_printf("bits=%u\n", bits);
@@ -152,7 +153,29 @@ void testLeadingZeroBits160() {
     assert(bits == 160);
 }
 
-int main(int argc, const char **argv) {
+void testCrunchLength() {
+    fprintf(stderr, "Starting %s\n", __func__);
+    uint64_t counter = UINT64_MAX;
+    uint8_t pubkey[128] = {0};
+    size_t len = 104;
+    uint32_t state[5] = {0};
+    uint32_t hash[5] = {0};
+    strncpy((char *) pubkey,
+            "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=",
+            len + 1);
+    len = append_counter(pubkey, len, counter);
+    debug_print_hex("data", pubkey, len);
+    do_sha1_first_block(pubkey, state);
+    debug_print_hex("state", state, SHA_DIGEST_LENGTH);
+    do_sha1_second_block_without_cpu_ext(pubkey, len, state, hash);
+    debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
+    uint8_t level = leading_zero_bits(hash);
+
+    debug_printf("level=%u\n", level);
+    assert(level == 37);
+}
+
+int main(int argc, const char** argv) {
     ((void) argc);
     ((void) argv);
     debug = true;
