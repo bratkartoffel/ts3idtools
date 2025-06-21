@@ -1,0 +1,174 @@
+name: build.yml
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches: [ "develop" ]
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  checks: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          disable-sudo: false # required for ccache action
+          egress-policy: block
+          allowed-endpoints: >
+            archive.ubuntu.com:443
+            azure.archive.ubuntu.com:80
+            github.com:443
+            objects.githubusercontent.com:443
+            security.ubuntu.com:443
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          lfs: true
+          submodules: recursive
+
+      - name: Install CMake/Ninja
+        uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1 # v1.2.18
+        with:
+          key: ${{ runner.os }}
+          append-timestamp: false
+
+      - name: Cache libressl
+        id: cache-libressl
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          key: libressl-${{ hashFiles('libressl/ChangeLog') }}
+          enableCrossOsArchive: true
+          path: libressl/
+
+      - name: Prepare libressl
+        run: cd libressl && ./update.sh
+        if: steps.cache-libressl.outputs.cache-hit != 'true'
+
+      - name: Run build
+        run: |
+          export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
+          cmake -Bcmake-build-release -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build cmake-build-release
+
+      - name: Run tests
+        run: cmake-build-release/ts3idtests
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: artifacts-linux
+          path: cmake-build-release/ts3id*
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Prepare git
+        run: |-
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          disable-sudo: true
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            objects.githubusercontent.com:443
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          lfs: true
+          submodules: recursive
+
+      - name: Install CMake/Ninja
+        uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1 # v1.2.18
+        with:
+          key: ${{ runner.os }}
+          variant: sccache
+          append-timestamp: false
+
+      - name: Cache libressl
+        id: cache-libressl
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          key: libressl-${{ hashFiles('libressl/ChangeLog') }}
+          enableCrossOsArchive: true
+          path: libressl/
+
+      - name: Prepare libressl
+        run: cd libressl && ./update.sh
+        shell: bash
+        if: steps.cache-libressl.outputs.cache-hit != 'true'
+
+      - name: Run build
+        run: |
+          cmake -Bcmake-build-release -GNinja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache `
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          cmake --build cmake-build-release
+
+      - name: Run tests
+        run: cmake-build-release/ts3idtests.exe
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: artifacts-windows
+          path: cmake-build-release/ts3id*
+
+#  build-macos:
+#    runs-on: macos-latest
+#
+#    steps:
+#      - uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+#        with:
+#          disable-sudo: true
+#          egress-policy: block
+#          allowed-endpoints: >
+#            github.com:443
+#            objects.githubusercontent.com:443
+#
+#      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+#        with:
+#          lfs: true
+#          submodules: recursive
+#
+#      - name: Install CMake/Ninja
+#        uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
+#
+#      - name: Prepare libressl
+#        run: cd libressl && ./update.sh
+#
+#      - name: Run build
+#        run: |
+#          export CMAKE_BUILD_PARALLEL_LEVEL=$(sysctl -n hw.physicalcpu)
+#          cmake -DCMAKE_BUILD_TYPE=Release -Bcmake-build-release
+#          cmake --build cmake-build-release
+#
+#      - name: Run tests
+#        run: cmake-build-release/ts3idtests
+#
+#      - name: Archive artifacts
+#        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+#        with:
+#          name: artifacts-macos
+#          path: cmake-build-release/ts3id*
