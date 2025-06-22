@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <threads.h>
+#include <pthread.h>
 #include <unistd.h>
 
 #ifdef HAVE_SYS_RESOURCE_H
@@ -18,7 +18,7 @@
 #endif
 
 typedef struct worker_settings_t {
-    thrd_t thread_id;
+    pthread_t thread_id;
     uint8_t worker_id;
     uint8_t level;
     uint8_t pubkey_len;
@@ -36,13 +36,13 @@ atomic_uint_fast64_t counter = 0;
 volatile bool do_stop = false;
 uint64_t results[SHA_DIGEST_LENGTH * 8 + 1];
 
-int stats_loop(void *arg) {
+void *stats_loop(void *arg) {
     debug_printf("> stats_loop(%p)\n", arg);
     stats_settings *settings = arg;
     // immediately stop stats thread if disabled
     if (settings->interval == 0) {
         debug_printf("< stats_loop(): %p\n", NULL);
-        return 0;
+        return NULL;
     }
 
     uint64_t old_counter = counter;
@@ -73,10 +73,10 @@ int stats_loop(void *arg) {
         fflush(stdout);
     }
     debug_printf("< stats_loop(): %p\n", NULL);
-    return 0;
+    return NULL;
 }
 
-int worker_loop(void *arg) {
+void *worker_loop(void *arg) {
     debug_printf("> worker_loop(%p)\n", arg);
     uint32_t first_block_state[5];
     uint32_t hash[5];
@@ -95,7 +95,7 @@ int worker_loop(void *arg) {
             do_stop = true;
             if (settings->one_shot) {
                 do_stop = true;
-                return 0;
+                return NULL;
             }
         }
         for (uint64_t i = lower; i < upper; i++) {
@@ -110,14 +110,14 @@ int worker_loop(void *arg) {
                 }
                 if (settings->one_shot) {
                     do_stop = true;
-                    return 0;
+                    return NULL;
                 }
             }
             data_len = increment_counter(settings->pubkey, settings->pubkey_len, data_len);
         }
     }
     debug_printf("< worker_loop(): %p\n", NULL);
-    return 0;
+    return NULL;
 }
 
 void sigHandler(int signal) {
@@ -221,7 +221,7 @@ bool start_workers(uint8_t threads, worker_settings settings[threads],
         memcpy(settings[i].pubkey, pubkey, settings[i].pubkey_len);
 
         debug_printf("> start_workers(): starting %u\n", i);
-        if (thrd_create(&settings[i].thread_id, worker_loop, &settings[i])) {
+        if (pthread_create(&settings[i].thread_id, NULL, &worker_loop, &settings[i])) {
             fprintf(stderr, "thrd_create(worker_loop[%u]) failed\n", i);
             result = false;
             break;
@@ -286,8 +286,8 @@ void print_final_statistics(const uint64_t start_time, const uint8_t threads, co
 void join_workers(uint8_t threads, const worker_settings *settings) {
     debug_printf("> join_workers(%u, %p)\n", threads, (void *) settings);
     for (uint8_t i = 0; i < threads; i++) {
-        int res;
-        if (thrd_join(settings[i].thread_id, &res)) {
+        void *res;
+        if (pthread_join(settings[i].thread_id, &res)) {
             fprintf(stderr, "thrd_join(%u) failed\n", i);
         }
     }
@@ -432,11 +432,11 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    thrd_t stats_thread;
+    pthread_t stats_thread;
     stats_settings stats_cfg;
     stats_cfg.interval = statsInterval;
     stats_cfg.pubkey_len = settings[0].pubkey_len;
-    if (thrd_create(&stats_thread, stats_loop, &stats_cfg)) {
+    if (pthread_create(&stats_thread, NULL, &stats_loop, &stats_cfg)) {
         fprintf(stderr, "thrd_create(stats_loop) failed\n");
         return 1;
     }
