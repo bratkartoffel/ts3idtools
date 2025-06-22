@@ -9,7 +9,8 @@
 #include <string.h>
 
 
-static void print_usage(const char *name) {
+static void print_usage(const char* name)
+{
     printf("Usage: %s [options]\n"
            "Options:\n"
            "  -h, --help             Print this usage information\n"
@@ -23,12 +24,14 @@ static void print_usage(const char *name) {
            "\n", name, VERSION);
 }
 
-static bool asn1_parse_integer(const unsigned char **asn1data_pos, long length, BIGNUM *bn_result) {
+static bool asn1_parse_integer(const unsigned char** asn1data_pos, long length, BIGNUM* bn_result)
+{
     debug_printf("> asn1_parse_integer(%p, %li, %p)\n",
                  (void *) asn1data_pos, length, (void *) bn_result);
     bool result = true;
-    ASN1_INTEGER *temp = ASN1_INTEGER_new();
-    if (!d2i_ASN1_INTEGER(&temp, asn1data_pos, length)) {
+    ASN1_INTEGER* temp = ASN1_INTEGER_new();
+    if (!d2i_ASN1_INTEGER(&temp, asn1data_pos, length))
+    {
         fprintf(stderr, "d2i_ASN1_INTEGER() failed\n");
         result = false;
     }
@@ -40,31 +43,35 @@ static bool asn1_parse_integer(const unsigned char **asn1data_pos, long length, 
 }
 
 static bool asn1_parse(size_t asn1data_len, const uint8_t asn1data[asn1data_len],
-                       BIGNUM *x, BIGNUM *y, BIGNUM *z) {
+                       BIGNUM* x, BIGNUM* y, BIGNUM* z)
+{
     debug_printf("> asn1_parse(%" PRIu64 ", %p, %p, %p, %p)\n",
                  asn1data_len, asn1data, (void *) x, (void *) y, (void *) z);
-    const unsigned char *asn1data_pos = asn1data;
-    long len, length = (long) asn1data_len;
+    const unsigned char* asn1data_pos = asn1data;
+    long len, length = (long)asn1data_len;
     int tag, xclass, ret;
     // SEQUENCE
     ret = ASN1_get_object(&asn1data_pos, &len, &tag, &xclass, length);
-    if (ret & 0x80) {
+    if (ret & 0x80)
+    {
         fprintf(stderr, "ASN1_get_object() failed\n");
         return false;
     }
-    if (tag != V_ASN1_SEQUENCE) {
+    if (tag != V_ASN1_SEQUENCE)
+    {
         fprintf(stderr, "(1) Invalid tag for ASN1: %d: %s\n", tag, ASN1_tag2str(tag));
         return false;
     }
     // BIT_STRING -- bitInfo, ignored for now
-    ASN1_BIT_STRING *temp = ASN1_BIT_STRING_new();
-    if (!d2i_ASN1_BIT_STRING(&temp, &asn1data_pos, length)) {
+    ASN1_BIT_STRING* temp = ASN1_BIT_STRING_new();
+    if (!d2i_ASN1_BIT_STRING(&temp, &asn1data_pos, length))
+    {
         fprintf(stderr, "d2i_ASN1_BIT_STRING() failed\n");
         return false;
     }
     ASN1_BIT_STRING_free(temp);
 
-    BIGNUM *ignored = BN_new();
+    BIGNUM* ignored = BN_new();
     if (!asn1_parse_integer(&asn1data_pos, length, ignored))
     {
         fprintf(stderr, "asn1_parse_integer(ignored) failed\n");
@@ -88,20 +95,25 @@ static bool asn1_parse(size_t asn1data_len, const uint8_t asn1data[asn1data_len]
     }
 
     // sanity check, everything parsed?
-    if (*asn1data_pos != 0) {
+    if (*asn1data_pos != 0)
+    {
         debug_printf("  asn1_parse: dangling data: %c\n", *asn1data_pos);
     }
     debug_printf("< asn1_parse(): 1\n");
     return true;
 }
 
-static bool validate_arguments(const char *identity_in) {
+static bool validate_arguments(const char* identity_in)
+{
     debug_printf("> validate_arguments(%s)\n", identity_in);
     bool result = true;
-    if (!identity_in) {
+    if (!identity_in)
+    {
         fprintf(stderr, "Missing required argument: 'identity'\n");
         result = false;
-    } else if (strlen(identity_in) > 256) {
+    }
+    else if (strlen(identity_in) > 256)
+    {
         fprintf(stderr, "Invalid argument: 'identity' is too long\n");
         result = false;
     }
@@ -109,14 +121,16 @@ static bool validate_arguments(const char *identity_in) {
     return result;
 }
 
-static void print_arguments(const char *identity_in, bool print_secret) {
+static void print_arguments(const char* identity_in, bool print_secret)
+{
     debug_printf("> print_arguments(%s, %u)\n", identity_in, print_secret);
     debug_printf("  print_arguments: identity_in=%s\n", identity_in);
     debug_printf("  print_arguments: print_secret=%u\n", print_secret);
     debug_printf("< print_arguments()\n");
 }
 
-static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identityData_len]) {
+static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identityData_len])
+{
     debug_printf("> deobfuscate_key(%" PRIu64 ", %p)\n",
                  identityData_len, identityData);
     bool result = true;
@@ -126,22 +140,25 @@ static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identi
     uint8_t identityHash[SHA_DIGEST_LENGTH];
     {
         int nullIndex = -1;
-        for (int i = 20; i < (int) identityData_len; i++) {
-            if (buffer[i] == 0x0) {
+        for (int i = 20; i < (int)identityData_len; i++)
+        {
+            if (buffer[i] == 0x0)
+            {
                 nullIndex = i - 20;
                 break;
             }
         }
         debug_printf("  deobfuscate_key: nullIndex=%d\n", nullIndex);
 
-        EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-        if (ctx == NULL) {
+        EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+        if (ctx == NULL)
+        {
             fprintf(stderr, "EVP_MD_CTX_new() failed\n");
             return false;
         }
-        const EVP_MD *md = EVP_sha1();
+        const EVP_MD* md = EVP_sha1();
         EVP_DigestInit(ctx, md);
-        EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int) identityData_len - 20 : nullIndex);
+        EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int)identityData_len - 20 : nullIndex);
         EVP_DigestFinal(ctx, identityHash, NULL);
         EVP_MD_CTX_free(ctx);
         debug_print_hex("  deobfuscate_key: identityHash", identityHash, SHA_DIGEST_LENGTH);
@@ -150,7 +167,8 @@ static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identi
     if (!ts3_xor(identityData_len, buffer, 0,
                  20, identityHash, 0,
                  20,
-                 identityData_len, buffer, 0)) {
+                 identityData_len, buffer, 0))
+    {
         fprintf(stderr, "xor() failed\n");
         result = false;
     }
@@ -159,25 +177,30 @@ static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identi
     if (!ts3_xor(identityData_len, buffer, 0,
                  OBFUSCATION_KEY_LEN, OBFUSCATION_KEY, 0,
                  identityData_len > 100 ? 100 : identityData_len,
-                 identityData_len, buffer, 0)) {
+                 identityData_len, buffer, 0))
+    {
         fprintf(stderr, "xor() failed\n");
         result = false;
     }
     debug_print_hex("  deobfuscate_key: round 2", buffer, identityData_len);
 
     bool null_found = false;
-    for (size_t i = 0; i < identityData_len; i++) {
-        if (buffer[i] == 0) {
+    for (size_t i = 0; i < identityData_len; i++)
+    {
+        if (buffer[i] == 0)
+        {
             null_found = true;
             break;
         }
     }
-    if (!null_found) {
+    if (!null_found)
+    {
         fprintf(stderr, "xor() failed, no null found\n");
         result = false;
     }
 
-    if (result) {
+    if (result)
+    {
         memcpy(identityData, buffer, identityData_len);
     }
 
@@ -185,54 +208,60 @@ static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identi
     return result;
 }
 
-int main(int argc, char** argv) {
-    const char *identity_in = NULL;
+int main(int argc, char** argv)
+{
+    const char* identity_in = NULL;
     bool print_secret = false;
 
     static struct option long_options[] = {
-            {"help",     no_argument,       NULL, 'h'},
-            {"identity", required_argument, NULL, 'i'},
-            {"secret",   no_argument,       NULL, 's'},
-            {"verbose",  no_argument,       NULL, 'v'},
-            {"version",  no_argument,       NULL, 'V'},
-            {NULL,    0,                 NULL, 0}
+        {"help", no_argument, NULL, 'h'},
+        {"identity", required_argument, NULL, 'i'},
+        {"secret", no_argument, NULL, 's'},
+        {"verbose", no_argument, NULL, 'v'},
+        {"version", no_argument, NULL, 'V'},
+        {NULL, 0, NULL, 0}
     };
     bool missing_value = false;
     int c;
-    while ((c = getopt_long(argc, argv, "hi:svV", long_options, NULL)) != -1) {
-        switch (c) {
-            case 'h':
-                print_usage(*argv);
-                return 0;
-            case 'i':
-                if (!optarg) {
-                    fprintf(stderr, "Value missing for option '%c'\n", c);
-                    missing_value = true;
-                    continue;
-                }
-                identity_in = optarg;
-                break;
-            case 's':
-                print_secret = true;
-                break;
-            case 'v':
-                debug = true;
-                break;
-            case 'V':
-                printf("ts3iddump version %s\n", VERSION);
-                return 0;
-            default:
-                fprintf(stderr, "Unknown option given: '%c'\n", c);
-                break;
+    while ((c = getopt_long(argc, argv, "hi:svV", long_options, NULL)) != -1)
+    {
+        switch (c)
+        {
+        case 'h':
+            print_usage(*argv);
+            return 0;
+        case 'i':
+            if (!optarg)
+            {
+                fprintf(stderr, "Value missing for option '%c'\n", c);
+                missing_value = true;
+                continue;
+            }
+            identity_in = optarg;
+            break;
+        case 's':
+            print_secret = true;
+            break;
+        case 'v':
+            debug = true;
+            break;
+        case 'V':
+            printf("ts3iddump version %s\n", VERSION);
+            return 0;
+        default:
+            fprintf(stderr, "Unknown option given: '%c'\n", c);
+            break;
         }
     }
 
-    if (missing_value) {
+    if (missing_value)
+    {
         print_usage(*argv);
         return 1;
     }
 
-    if (!validate_arguments(identity_in)) {
+    if (!validate_arguments(identity_in))
+    {
         fprintf(stderr, "validate_arguments() failed\n");
         print_usage(*argv);
         return 1;
@@ -240,15 +269,17 @@ int main(int argc, char** argv) {
 
     print_arguments(identity_in, print_secret);
 
-    const char *match = strchr(identity_in, 'V');
+    const char* match = strchr(identity_in, 'V');
     debug_printf("  main: match=%p\n", match);
-    if (!match) {
+    if (!match)
+    {
         print_usage(*argv);
         fprintf(stderr, "Invalid argument: 'identity' has wrong format (no 'V' found)\n");
         return 1;
     }
     debug_printf("  main: match - identity_in=%p\n", (void *) (match - identity_in));
-    if (match - identity_in == 0) {
+    if (match - identity_in == 0)
+    {
         print_usage(*argv);
         fprintf(stderr, "Invalid argument: 'identity' has wrong format (no counter found)\n");
         return 1;
@@ -264,7 +295,8 @@ int main(int argc, char** argv) {
 
     size_t identity_len = strlen(match + 1);
     debug_printf("  main: identity_len=%" PRIu64 "\n", identity_len);
-    if (identity_len < 190 || identity_len % 4 != 0) {
+    if (identity_len < 190 || identity_len % 4 != 0)
+    {
         print_usage(*argv);
         fprintf(stderr, "Invalid argument: 'identity' has wrong format (wrong length: %" PRIu64 ")\n", identity_len);
         return 1;
@@ -275,28 +307,32 @@ int main(int argc, char** argv) {
 
     size_t identityData_len = base64_get_decode_length(identity_len);
     uint8_t identityData[identityData_len];
-    if (!base64_decode(identity_len, identity, &identityData_len, identityData)) {
+    if (!base64_decode(identity_len, identity, &identityData_len, identityData))
+    {
         fprintf(stderr, "base64_decode() failed\n");
         return 1;
     }
 
-    if (!deobfuscate_key(identityData_len, identityData)) {
+    if (!deobfuscate_key(identityData_len, identityData))
+    {
         fprintf(stderr, "obfuscate_key() failed\n");
         return 1;
     }
 
     size_t asn1data_len = base64_get_decode_length(identityData_len);
     uint8_t asn1data[asn1data_len];
-    if (!base64_decode(identityData_len, identityData, &asn1data_len, asn1data)) {
+    if (!base64_decode(identityData_len, identityData, &asn1data_len, asn1data))
+    {
         fprintf(stderr, "base64_decode() failed\n");
         return 1;
     }
     debug_print_hex("  main: asn1 data", asn1data, asn1data_len);
 
-    BIGNUM *x = BN_new();
-    BIGNUM *y = BN_new();
-    BIGNUM *z = BN_new();
-    if (!asn1_parse(asn1data_len, asn1data, x, y, z)) {
+    BIGNUM* x = BN_new();
+    BIGNUM* y = BN_new();
+    BIGNUM* z = BN_new();
+    if (!asn1_parse(asn1data_len, asn1data, x, y, z))
+    {
         fprintf(stderr, "asn1_parse() failed\n");
         unsigned long code;
         while ((code = ERR_get_error()))
@@ -320,7 +356,8 @@ int main(int argc, char** argv) {
     printf("PublicKey=%s\n", pubkey);
     print_bignum("  x=%s\n", x);
     print_bignum("  y=%s\n", y);
-    if (print_secret) {
+    if (print_secret)
+    {
         size_t privkey_len = PRIVKEY_LEN_OBFUSCATED_B64;
         ts3_privkey_t privkey[privkey_len + 1];
         memset(privkey, 0, privkey_len);

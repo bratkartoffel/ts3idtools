@@ -18,19 +18,24 @@
 #define OBFUSCATION_KEY            ((const uint8_t *) "b9dfaa7bee6ac57ac7b65f1094a1c155e747327bc2fe5d51c512023fe54a280201004e90ad1daaae1075d53b7d571c30e063b5a62a4a017bb394833aa0983e6e")
 #define MAX_MSG_LENGTH_2_BLOCKS    119
 
-#define debug_printf(fmt, ...)                    \
-    do {                                          \
-        if (debug) {                              \
-            fprintf(stderr, fmt, ##__VA_ARGS__);  \
-            fflush(stderr);                       \
-        }                                         \
+#define debug_printf(fmt, ...)                               \
+    do                                                       \
+    {                                                        \
+        if (debug)                                           \
+        {                                                    \
+            fprintf(stderr, fmt __VA_OPT__(,) __VA_ARGS__);  \
+            fflush(stderr);                                  \
+        }                                                    \
     } while (0)
 
 #define debug_print_hex(prefix, x, len)                      \
-    do {                                                     \
-        if(debug) {                                          \
+    do                                                       \
+    {                                                        \
+        if (debug)                                           \
+        {                                                    \
             debug_printf("%s=", prefix);                     \
-            for (int i = 0; i < (int) len; i++) {            \
+            for (int i = 0; i < (int) len; i++)              \
+            {                                                \
                 debug_printf("%02x ", ((uint8_t*)(x))[i]);   \
             }                                                \
             debug_printf("\n");                              \
@@ -51,20 +56,22 @@ size_t append_counter(uint8_t data[PUBKEY_LEN_B64], size_t length, uint64_t valu
 
 size_t increment_counter(uint8_t data[PUBKEY_LEN_B64], size_t pubkey_length, size_t complete_length);
 
-bool ts3_xor(size_t a_len, const uint8_t *a, int aoffs,
-             size_t b_len, const uint8_t *b, int boffs,
+bool ts3_xor(size_t a_len, const uint8_t* a, int aoffs,
+             size_t b_len, const uint8_t* b, int boffs,
              size_t len,
-             size_t outBuf_len, uint8_t *outBuf, int outOffs);
+             size_t outBuf_len, uint8_t* outBuf, int outOffs);
 
-void create_pubkey(const BIGNUM *x, const BIGNUM *y,
-                   size_t *pubkey_len, ts3_pubkey_t pubkey[*pubkey_len]);
+void create_pubkey(const BIGNUM* x, const BIGNUM* y,
+                   size_t* pubkey_len, ts3_pubkey_t pubkey[*pubkey_len]);
 
-void create_privkey(const BIGNUM *x, const BIGNUM *y, const BIGNUM *z,
-                    size_t *privkey_len, ts3_privkey_t privkey[*privkey_len]);
+void create_privkey(const BIGNUM* x, const BIGNUM* y, const BIGNUM* z,
+                    size_t* privkey_len, ts3_privkey_t privkey[*privkey_len]);
 
 void create_uuid(size_t pubkey_len, ts3_pubkey_t pubkey[pubkey_len],
-                 size_t *uuid_len, ts3_uuid_t uuid[*uuid_len]);
+                 size_t* uuid_len, ts3_uuid_t uuid[*uuid_len]);
 
-void print_bignum(const char *format, const BIGNUM *num);
+void print_bignum(const char* format, const BIGNUM* num);
+
+bool check_for_intel_sha_extensions();
 
 #endif //TS3IDTOOLS_GLOBALS_H

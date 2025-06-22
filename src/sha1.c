@@ -3,17 +3,19 @@
 
 #if defined(__linux__)
 #  include <endian.h>
+#  include <immintrin.h>
 #elif defined(__WIN32)
-#    define be32toh(x) _byteswap_ulong(x)
+#  include <immintrin.h>
+#  define be32toh(x) _byteswap_ulong(x)
 #elif defined(__APPLE__)
 #  include <libkern/OSByteOrder.h>
 #  define be32toh(x) OSSwapBigToHostInt32(x)
 #endif
 
 #include <string.h>
-#include <immintrin.h>
 
-void do_sha1_first_block(uint8_t data[128], uint32_t state[5]) {
+void do_sha1_first_block(uint8_t data[128], uint32_t state[5])
+{
     state[0] = 0x67452301;
     state[1] = 0xEFCDAB89;
     state[2] = 0x98BADCFE;
@@ -29,9 +31,10 @@ void do_sha1_first_block(uint8_t data[128], uint32_t state[5]) {
 #endif
 }
 
-void do_sha1_second_block_without_cpu_ext(uint8_t data[128], size_t len, const uint32_t state[5], uint32_t hash[5]) {
+void do_sha1_second_block_without_cpu_ext(uint8_t data[128], size_t len, const uint32_t state[5], uint32_t hash[5])
+{
     // prepare second block
-    uint8_t *block = data + 64;
+    uint8_t* block = data + 64;
     block[len - 64] = 0x80;
 
     // length is in bits and always < 16 bit
@@ -55,9 +58,10 @@ void do_sha1_second_block_without_cpu_ext(uint8_t data[128], size_t len, const u
 #endif
 }
 
-void do_sha1_second_block_with_cpu_ext(uint8_t data[128], size_t len, const uint32_t state[5], uint32_t hash[5]) {
+void do_sha1_second_block_with_cpu_ext(uint8_t data[128], size_t len, const uint32_t state[5], uint32_t hash[5])
+{
     // prepare second block
-    uint8_t *block = data + 64;
+    uint8_t* block = data + 64;
     block[len - 64] = 0x80;
 
     // length is in bits and always < 16 bit
@@ -81,7 +85,8 @@ void do_sha1_second_block_with_cpu_ext(uint8_t data[128], size_t len, const uint
 #endif
 }
 
-void sha1_compress_cpu(uint32_t digest[5], const uint8_t *block) {
+void sha1_compress_cpu(uint32_t digest[5], const uint8_t* block)
+{
     __m128i abcd, e0 = {0}, e1;
     __m128i abcd_save, e_save;
     __m128i msg0, msg1, msg2, msg3;
@@ -91,7 +96,7 @@ void sha1_compress_cpu(uint32_t digest[5], const uint8_t *block) {
     shuf_mask = _mm_set_epi64x(0x0001020304050607ull, 0x08090a0b0c0d0e0full);
 
     // Load initial hash values
-    abcd = _mm_loadu_si128((__m128i *) digest);
+    abcd = _mm_loadu_si128((__m128i*)digest);
     e0 = _mm_insert_epi32(e0, *(digest + 4), 3);
     abcd = _mm_shuffle_epi32(abcd, 0x1B);
     e0 = _mm_and_si128(e0, e_mask);
@@ -101,14 +106,14 @@ void sha1_compress_cpu(uint32_t digest[5], const uint8_t *block) {
     e_save = e0;
 
     // Rounds 0-3
-    msg0 = _mm_loadu_si128((__m128i *) block);
+    msg0 = _mm_loadu_si128((__m128i*)block);
     msg0 = _mm_shuffle_epi8(msg0, shuf_mask);
     e0 = _mm_add_epi32(e0, msg0);
     e1 = abcd;
     abcd = _mm_sha1rnds4_epu32(abcd, e0, 0);
 
     // Rounds 4-7
-    msg1 = _mm_loadu_si128((__m128i *) (block + 16));
+    msg1 = _mm_loadu_si128((__m128i*)(block + 16));
     msg1 = _mm_shuffle_epi8(msg1, shuf_mask);
     e1 = _mm_sha1nexte_epu32(e1, msg1);
     e0 = abcd;
@@ -116,7 +121,7 @@ void sha1_compress_cpu(uint32_t digest[5], const uint8_t *block) {
     msg0 = _mm_sha1msg1_epu32(msg0, msg1);
 
     // Rounds 8-11
-    msg2 = _mm_loadu_si128((__m128i *) (block + 32));
+    msg2 = _mm_loadu_si128((__m128i*)(block + 32));
     msg2 = _mm_shuffle_epi8(msg2, shuf_mask);
     e0 = _mm_sha1nexte_epu32(e0, msg2);
     e1 = abcd;
@@ -125,7 +130,7 @@ void sha1_compress_cpu(uint32_t digest[5], const uint8_t *block) {
     msg0 = _mm_xor_si128(msg0, msg2);
 
     // Rounds 12-15
-    msg3 = _mm_loadu_si128((__m128i *) (block + 48));
+    msg3 = _mm_loadu_si128((__m128i*)(block + 48));
     msg3 = _mm_shuffle_epi8(msg3, shuf_mask);
     e1 = _mm_sha1nexte_epu32(e1, msg3);
     e0 = abcd;
@@ -261,7 +266,7 @@ void sha1_compress_cpu(uint32_t digest[5], const uint8_t *block) {
     abcd = _mm_add_epi32(abcd, abcd_save);
 
     abcd = _mm_shuffle_epi32(abcd, 0x1B);
-    _mm_store_si128((__m128i *) digest, abcd);
+    _mm_store_si128((__m128i*)digest, abcd);
     *(digest + 4) = _mm_extract_epi32(e0, 3);
 }
 
@@ -293,8 +298,9 @@ void sha1_compress_cpu(uint32_t digest[5], const uint8_t *block) {
     SCHEDULE(i)  \
     ROUNDTAIL(a, b, e, (b ^ c ^ d), i, 0xCA62C1D6)
 
-void sha1_compress_software(uint32_t state[5], const uint8_t *data) {
-    const uint32_t *block = (const uint32_t *) data;
+void sha1_compress_software(uint32_t state[5], const uint8_t* data)
+{
+    const uint32_t* block = (const uint32_t*)data;
     uint32_t a = state[0];
     uint32_t b = state[1];
     uint32_t c = state[2];

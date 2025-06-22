@@ -11,7 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 
-static void print_usage(const char *name) {
+static void print_usage(const char* name)
+{
     printf("Usage: %s [options]\n"
            "Options:\n"
            "  -h, --help             Print this usage information\n"
@@ -27,15 +28,18 @@ static void print_usage(const char *name) {
            "\n", name, VERSION);
 }
 
-static bool validate_arguments(const char *nickname, const char *name) {
+static bool validate_arguments(const char* nickname, const char* name)
+{
     debug_printf("> validate_arguments(%s, %s)\n",
                  nickname, name);
     bool result = true;
-    if (strlen(nickname) < 3 || strlen(nickname) > 30) {
+    if (strlen(nickname) < 3 || strlen(nickname) > 30)
+    {
         fprintf(stderr, "Invalid argument: 'nickname' is too short or too long\n");
         result = false;
     }
-    if (strlen(name) == 0 || strlen(name) > 30) {
+    if (strlen(name) == 0 || strlen(name) > 30)
+    {
         fprintf(stderr, "Invalid argument: 'alias' may not be empty\n");
         result = false;
     }
@@ -43,7 +47,8 @@ static bool validate_arguments(const char *nickname, const char *name) {
     return result;
 }
 
-static void print_arguments(const char *name, const char *nickname, const char *output_file) {
+static void print_arguments(const char* name, const char* nickname, const char* output_file)
+{
     debug_printf("> print_arguments(%s, %s, %s)\n", nickname, name, output_file);
     debug_printf("  print_arguments: name=%s\n", name);
     debug_printf("  print_arguments: nickname=%s\n", nickname);
@@ -51,31 +56,36 @@ static void print_arguments(const char *name, const char *nickname, const char *
     debug_printf("< print_arguments()\n");
 }
 
-static EC_KEY *create_new_key() {
+static EC_KEY* create_new_key()
+{
     debug_printf("> create_new_key()\n");
-    EC_KEY *ec_key = EC_KEY_new();
+    EC_KEY* ec_key = EC_KEY_new();
 
     debug_printf("  create_new_key: ec_key=%p\n", (void *) ec_key);
-    if (!ec_key) {
+    if (!ec_key)
+    {
         fprintf(stderr, "EC_KEY_new() failed\n");
         goto abort;
     }
 
-    EC_GROUP *ec_group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
+    EC_GROUP* ec_group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
     debug_printf("  create_new_key: ec_group=%p\n", (void *) ec_group);
-    if (!ec_group) {
+    if (!ec_group)
+    {
         fprintf(stderr, "EC_GROUP_new_by_curve_name() failed\n");
         goto abort;
     }
 
     debug_printf("  create_new_key: pre EC_KEY_set_group\n");
-    if (!EC_KEY_set_group(ec_key, ec_group)) {
+    if (!EC_KEY_set_group(ec_key, ec_group))
+    {
         fprintf(stderr, "EC_KEY_set_group() failed\n");
         goto abort;
     }
 
     debug_printf("  create_new_key: pre EC_KEY_generate_key\n");
-    if (!EC_KEY_generate_key(ec_key)) {
+    if (!EC_KEY_generate_key(ec_key))
+    {
         fprintf(stderr, "EC_KEY_generate_key() failed\n");
         goto abort;
     }
@@ -83,30 +93,36 @@ static EC_KEY *create_new_key() {
     debug_printf("< create_new_key(): %p\n", (void *) ec_key);
     return ec_key;
 
-    abort:
+abort:
     EC_KEY_free(ec_key);
     debug_printf("< create_new_key(): %p\n", NULL);
     return NULL;
 }
 
-static void write_identity(const char *name, const char *nickname, const char *output_file,
-                           uint64_t counter, const char *obfuscated) {
+static void write_identity(const char* name, const char* nickname, const char* output_file,
+                           uint64_t counter, const char* obfuscated)
+{
     debug_printf("> write_identity(%s, %s, %s, %" PRIu64", %s)\n",
                  name, nickname, output_file, counter, obfuscated);
-    FILE *fp;
-    if (output_file[0] == '-' && output_file[1] == 0) {
+    FILE* fp;
+    if (output_file[0] == '-' && output_file[1] == 0)
+    {
         fp = stdout;
-    } else {
+    }
+    else
+    {
         fp = fopen(output_file, "w");
-        if (!fp) {
+        if (!fp)
+        {
             fprintf(stderr, "fopen() failed: %i: %s\n", errno, strerror(errno));
         }
     }
-    if (fp) {
+    if (fp)
+    {
         fprintf(fp, "[Identity]\n"
-                    "id=%s\n"
-                    "identity=\"%" PRIu64 "V%s\"\n"
-                    "nickname=%s\n",
+                "id=%s\n"
+                "identity=\"%" PRIu64 "V%s\"\n"
+                "nickname=%s\n",
                 name,
                 counter, obfuscated,
                 nickname);
@@ -115,7 +131,8 @@ static void write_identity(const char *name, const char *nickname, const char *o
     debug_printf("< write_identity()\n");
 }
 
-static bool obfuscate_key(size_t privkey_len, ts3_privkey_t privkey[privkey_len]) {
+static bool obfuscate_key(size_t privkey_len, ts3_privkey_t privkey[privkey_len])
+{
     debug_printf("> obfuscate_key(%" PRIu64 ", %p)\n",
                  privkey_len, privkey);
     bool result = true;
@@ -125,7 +142,8 @@ static bool obfuscate_key(size_t privkey_len, ts3_privkey_t privkey[privkey_len]
     if (!ts3_xor(privkey_len, buffer, 0,
                  OBFUSCATION_KEY_LEN, OBFUSCATION_KEY, 0,
                  privkey_len > 100 ? 100 : privkey_len,
-                 privkey_len, buffer, 0)) {
+                 privkey_len, buffer, 0))
+    {
         fprintf(stderr, "xor() failed\n");
         result = false;
     }
@@ -134,24 +152,27 @@ static bool obfuscate_key(size_t privkey_len, ts3_privkey_t privkey[privkey_len]
     uint8_t identityHash[SHA_DIGEST_LENGTH];
     {
         int nullIndex = -1;
-        for (int i = 20; i < (int) privkey_len; i++) {
-            if (buffer[i] == 0x0) {
+        for (int i = 20; i < (int)privkey_len; i++)
+        {
+            if (buffer[i] == 0x0)
+            {
                 nullIndex = i - 20;
                 break;
             }
         }
         debug_printf("  obfuscate_key: nullIndex=%d\n", nullIndex);
 
-        EVP_MD_CTX *ctx;
+        EVP_MD_CTX* ctx;
         ctx = EVP_MD_CTX_new();
-        if (ctx == NULL) {
+        if (ctx == NULL)
+        {
             fprintf(stderr, "EVP_MD_CTX_new() failed\n");
             return false;
         }
 
-        const EVP_MD *md = EVP_sha1();
+        const EVP_MD* md = EVP_sha1();
         EVP_DigestInit(ctx, md);
-        EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int) privkey_len - 20 : nullIndex);
+        EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int)privkey_len - 20 : nullIndex);
         EVP_DigestFinal(ctx, identityHash, NULL);
         EVP_MD_CTX_free(ctx);
         debug_print_hex("  obfuscate_key: identityHash", identityHash, SHA_DIGEST_LENGTH);
@@ -160,13 +181,15 @@ static bool obfuscate_key(size_t privkey_len, ts3_privkey_t privkey[privkey_len]
     if (!ts3_xor(privkey_len, buffer, 0,
                  20, identityHash, 0,
                  20,
-                 privkey_len, buffer, 0)) {
+                 privkey_len, buffer, 0))
+    {
         fprintf(stderr, "xor() failed\n");
         result = false;
     }
     debug_print_hex("  obfuscate_key: round 2", buffer, privkey_len);
 
-    if (result) {
+    if (result)
+    {
         memcpy(privkey, buffer, privkey_len);
     }
 
@@ -174,88 +197,99 @@ static bool obfuscate_key(size_t privkey_len, ts3_privkey_t privkey[privkey_len]
     return result;
 }
 
-static uint64_t increase_level_to_min(size_t pubkey_len, ts3_pubkey_t *pubkey) {
+static uint64_t increase_level_to_min(size_t pubkey_len, ts3_pubkey_t pubkey[pubkey_len])
+{
     debug_printf("> increase_level_to_min(%" PRIu64 ", %p)\n", pubkey_len, pubkey);
     uint32_t state[5];
     do_sha1_first_block(pubkey, state);
     uint32_t hash[5];
     uint64_t counter = 0;
     uint8_t level;
-    do {
+    do
+    {
         counter++;
         size_t data_len = append_counter(pubkey, pubkey_len, counter);
         do_sha1_second_block_without_cpu_ext(pubkey, data_len, state, hash);
         level = leading_zero_bits(hash);
         debug_printf("  increase_level_to_min: counter=%" PRIu64 ", level=%u\n", counter, level);
-    } while (level < 8);
+    }
+    while (level < 8);
 
     debug_printf("< increase_level_to_min(): %" PRIu64 "\n", counter);
     return counter;
 }
 
-int main(int argc, char** argv) {
-    const char *name = "New identity";
-    const char *nickname = "anonymous";
-    const char *output_file = "-";
+int main(int argc, char** argv)
+{
+    const char* name = "New identity";
+    const char* nickname = "anonymous";
+    const char* output_file = "-";
 
     static struct option long_options[] = {
-            {"help",     no_argument,       NULL, 'h'},
-            {"name",     required_argument, NULL, 'i'},
-            {"nickname", required_argument, NULL, 'n'},
-            {"output",   required_argument, NULL, 'o'},
-            {"verbose",  no_argument,       NULL, 'v'},
-            {"version",  no_argument,       NULL, 'V'},
-            {NULL, 0,                    NULL, 0}
+        {"help", no_argument, NULL, 'h'},
+        {"name", required_argument, NULL, 'i'},
+        {"nickname", required_argument, NULL, 'n'},
+        {"output", required_argument, NULL, 'o'},
+        {"verbose", no_argument, NULL, 'v'},
+        {"version", no_argument, NULL, 'V'},
+        {NULL, 0, NULL, 0}
     };
     bool missing_value = false;
     int c;
-    while ((c = getopt_long(argc, (char *const *) argv, "hi:n:o:vV", long_options, NULL)) != -1) {
-        switch (c) {
-            case 'h':
-                print_usage(*argv);
-                return 0;
-            case 'i':
-                if (!optarg) {
-                    fprintf(stderr, "Value missing for option '%c'\n", c);
-                    missing_value = true;
-                    continue;
-                }
-                name = optarg;
-                break;
-            case 'n':
-                if (!optarg) {
-                    fprintf(stderr, "Value missing for option '%c'\n", c);
-                    missing_value = true;
-                    continue;
-                }
-                nickname = optarg;
-                break;
-            case 'o':
-                if (!optarg) {
-                    fprintf(stderr, "Value missing for option '%c'\n", c);
-                    missing_value = true;
-                    continue;
-                }
-                output_file = optarg;
-                break;
-            case 'v':
-                debug = true;
-                break;
-            case 'V':
-                printf("ts3idgen version %s\n", VERSION);
-                return 0;
-            default:
-                fprintf(stderr, "Unknown option given: '%c'\n", optopt);
-                break;
+    while ((c = getopt_long(argc, (char*const *)argv, "hi:n:o:vV", long_options, NULL)) != -1)
+    {
+        switch (c)
+        {
+        case 'h':
+            print_usage(*argv);
+            return 0;
+        case 'i':
+            if (!optarg)
+            {
+                fprintf(stderr, "Value missing for option '%c'\n", c);
+                missing_value = true;
+                continue;
+            }
+            name = optarg;
+            break;
+        case 'n':
+            if (!optarg)
+            {
+                fprintf(stderr, "Value missing for option '%c'\n", c);
+                missing_value = true;
+                continue;
+            }
+            nickname = optarg;
+            break;
+        case 'o':
+            if (!optarg)
+            {
+                fprintf(stderr, "Value missing for option '%c'\n", c);
+                missing_value = true;
+                continue;
+            }
+            output_file = optarg;
+            break;
+        case 'v':
+            debug = true;
+            break;
+        case 'V':
+            printf("ts3idgen version %s\n", VERSION);
+            return 0;
+        default:
+            fprintf(stderr, "Unknown option given: '%c'\n", optopt);
+            break;
         }
     }
 
-    if (missing_value) {
+    if (missing_value)
+    {
         print_usage(*argv);
         return 1;
     }
 
-    if (!validate_arguments(nickname, name)) {
+    if (!validate_arguments(nickname, name))
+    {
         fprintf(stderr, "validate_arguments() failed\n");
         print_usage(*argv);
         return 1;
@@ -263,30 +297,35 @@ int main(int argc, char** argv) {
 
     print_arguments(name, nickname, output_file);
 
-    EC_KEY *ec_key = create_new_key();
-    if (!ec_key) {
+    EC_KEY* ec_key = create_new_key();
+    if (!ec_key)
+    {
         fprintf(stderr, "create_new_key() failed\n");
         return 1;
     }
 
-    const EC_POINT *ec_pub = EC_KEY_get0_public_key(ec_key);
-    if (!ec_pub) {
+    const EC_POINT* ec_pub = EC_KEY_get0_public_key(ec_key);
+    if (!ec_pub)
+    {
         fprintf(stderr, "EC_KEY_get0_public_key() failed\n");
         return 1;
     }
 
-    BIGNUM *x = BN_new();
-    if (!x) {
+    BIGNUM* x = BN_new();
+    if (!x)
+    {
         fprintf(stderr, "BN_new(x) failed\n");
         return 1;
     }
-    BIGNUM *y = BN_new();
-    if (!y) {
+    BIGNUM* y = BN_new();
+    if (!y)
+    {
         fprintf(stderr, "BN_new(y) failed\n");
         return 1;
     }
 
-    if (!EC_POINT_get_affine_coordinates_GFp(EC_KEY_get0_group(ec_key), ec_pub, x, y, NULL)) {
+    if (!EC_POINT_get_affine_coordinates_GFp(EC_KEY_get0_group(ec_key), ec_pub, x, y, NULL))
+    {
         fprintf(stderr, "EC_POINT_get_affine_coordinates_GFp() failed\n");
         return 1;
     }
@@ -310,14 +349,15 @@ int main(int argc, char** argv) {
     create_privkey(x, y, EC_KEY_get0_private_key(ec_key), &privkey_len, privkey);
     debug_printf("  main: privkey=%s\n", privkey);
 
-    if (!obfuscate_key(privkey_len, privkey)) {
+    if (!obfuscate_key(privkey_len, privkey))
+    {
         fprintf(stderr, "obfuscate_key() failed\n");
         return 1;
     }
 
     size_t obfuscated_len = base64_get_encode_length(privkey_len);
     char obfuscated[obfuscated_len + 1];
-    base64_encode(privkey_len, privkey, &obfuscated_len, (unsigned char*) obfuscated);
+    base64_encode(privkey_len, privkey, &obfuscated_len, (unsigned char*)obfuscated);
     debug_printf("  main: obfuscated=%s\n", obfuscated);
 
     write_identity(name, nickname, output_file, counter, obfuscated);
