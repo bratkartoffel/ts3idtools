@@ -135,14 +135,14 @@ static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identi
         debug_printf("  deobfuscate_key: nullIndex=%d\n", nullIndex);
 
         EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-        if (ctx == nullptr) {
+        if (ctx == NULL) {
             fprintf(stderr, "EVP_MD_CTX_new() failed\n");
             return false;
         }
         const EVP_MD *md = EVP_sha1();
         EVP_DigestInit(ctx, md);
         EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int) identityData_len - 20 : nullIndex);
-        EVP_DigestFinal(ctx, identityHash, nullptr);
+        EVP_DigestFinal(ctx, identityHash, NULL);
         EVP_MD_CTX_free(ctx);
         debug_print_hex("  deobfuscate_key: identityHash", identityHash, SHA_DIGEST_LENGTH);
     }
@@ -186,20 +186,20 @@ static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identi
 }
 
 int main(int argc, char** argv) {
-    const char *identity_in = nullptr;
+    const char *identity_in = NULL;
     bool print_secret = false;
 
     static struct option long_options[] = {
-            {"help",     no_argument,       nullptr, 'h'},
-            {"identity", required_argument, nullptr, 'i'},
-            {"secret",   no_argument,       nullptr, 's'},
-            {"verbose",  no_argument,       nullptr, 'v'},
-            {"version",  no_argument,       nullptr, 'V'},
-            {nullptr,    0,                 nullptr, 0}
+            {"help",     no_argument,       NULL, 'h'},
+            {"identity", required_argument, NULL, 'i'},
+            {"secret",   no_argument,       NULL, 's'},
+            {"verbose",  no_argument,       NULL, 'v'},
+            {"version",  no_argument,       NULL, 'V'},
+            {NULL,    0,                 NULL, 0}
     };
     bool missing_value = false;
     int c;
-    while ((c = getopt_long(argc, argv, "hi:svV", long_options, nullptr)) != -1) {
+    while ((c = getopt_long(argc, argv, "hi:svV", long_options, NULL)) != -1) {
         switch (c) {
             case 'h':
                 print_usage(*argv);
@@ -258,7 +258,7 @@ int main(int argc, char** argv) {
         char temp[match - identity_in + 1];
         memcpy(temp, identity_in, match - identity_in);
         temp[match - identity_in] = 0;
-        counter = strtoll(temp, nullptr, 10);
+        counter = strtoll(temp, NULL, 10);
         debug_printf("  main: counter=%" PRIu64 "\n", counter);
     }
 
