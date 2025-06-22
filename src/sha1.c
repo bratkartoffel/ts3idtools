@@ -1,6 +1,8 @@
 #include "globals.h"
 #include "sha1.h"
 
+#include <byteswap.h>
+#include <string.h>
 #include <immintrin.h>
 
 bool initialized = false;
@@ -33,6 +35,12 @@ void do_sha1_second_block_without_cpu_ext(uint8_t data[128], size_t len, const u
 
     memcpy(hash, state, SHA_DIGEST_LENGTH);
     sha1_compress_software(hash, block);
+
+    hash[0] = bswap_32(hash[0]);
+    hash[1] = bswap_32(hash[1]);
+    hash[2] = bswap_32(hash[2]);
+    hash[3] = bswap_32(hash[3]);
+    hash[4] = bswap_32(hash[4]);
 #if 0
     // for debugging / verifying optimizations
     debug_printf("===========================\n");
@@ -53,6 +61,12 @@ void do_sha1_second_block_with_cpu_ext(uint8_t data[128], size_t len, const uint
 
     memcpy(hash, state, SHA_DIGEST_LENGTH);
     sha1_compress_cpu(hash, block);
+
+    hash[0] = bswap_32(hash[0]);
+    hash[1] = bswap_32(hash[1]);
+    hash[2] = bswap_32(hash[2]);
+    hash[3] = bswap_32(hash[3]);
+    hash[4] = bswap_32(hash[4]);
 #if 0
     // for debugging / verifying optimizations
     debug_printf("===========================\n");

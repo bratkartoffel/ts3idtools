@@ -1,7 +1,7 @@
-#include <stdint.h>
+#ifndef TS3IDTOOLS_SHA1_H
+#define TS3IDTOOLS_SHA1_H
 
-#ifndef TS3IDGEN_SHA1_H
-#define TS3IDGEN_SHA1_H
+#include <stdint.h>
 
 void do_sha1_first_block(uint8_t data[128], uint32_t state[5]);
 
@@ -13,4 +13,4 @@ void sha1_compress_cpu(uint32_t digest[5], const uint8_t *block);
 
 void sha1_compress_software(uint32_t state[5], const uint8_t *data);
 
-#endif //TS3IDGEN_SHA1_H
+#endif //TS3IDTOOLS_SHA1_H

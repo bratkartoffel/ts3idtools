@@ -3,10 +3,11 @@
 
 #include <getopt.h>
 #include <inttypes.h>
+#include <openssl/err.h>
 #include <openssl/evp.h>
 #include <stdio.h>
+#include <string.h>
 
-#include "openssl/err.h"
 
 static void print_usage(const char *name) {
     printf("Usage: %s [options]\n"
@@ -133,16 +134,15 @@ static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identi
         }
         debug_printf("  deobfuscate_key: nullIndex=%d\n", nullIndex);
 
-        EVP_MD_CTX *ctx;
-        ctx = EVP_MD_CTX_new();
-        if (ctx == NULL) {
+        EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+        if (ctx == nullptr) {
             fprintf(stderr, "EVP_MD_CTX_new() failed\n");
             return false;
         }
         const EVP_MD *md = EVP_sha1();
         EVP_DigestInit(ctx, md);
         EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int) identityData_len - 20 : nullIndex);
-        EVP_DigestFinal(ctx, identityHash, NULL);
+        EVP_DigestFinal(ctx, identityHash, nullptr);
         EVP_MD_CTX_free(ctx);
         debug_print_hex("  deobfuscate_key: identityHash", identityHash, SHA_DIGEST_LENGTH);
     }
@@ -185,20 +185,21 @@ static bool deobfuscate_key(size_t identityData_len, uint8_t identityData[identi
     return result;
 }
 
-int main(int argc, const char *const *argv) {
-    const char *identity_in = NULL;
+int main(int argc, char** argv) {
+    const char *identity_in = nullptr;
     bool print_secret = false;
 
     static struct option long_options[] = {
-            {"help",     no_argument,       0, 'h'},
-            {"identity", required_argument, 0, 'i'},
-            {"secret",   no_argument,       0, 's'},
-            {"verbose",  no_argument,       0, 'v'},
-            {0,          0,                 0, 0}
+            {"help",     no_argument,       nullptr, 'h'},
+            {"identity", required_argument, nullptr, 'i'},
+            {"secret",   no_argument,       nullptr, 's'},
+            {"verbose",  no_argument,       nullptr, 'v'},
+            {"version",  no_argument,       nullptr, 'V'},
+            {nullptr,    0,                 nullptr, 0}
     };
     bool missing_value = false;
     int c;
-    while ((c = getopt_long(argc, (char *const *) argv, "vhi:s", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "hi:svV", long_options, nullptr)) != -1) {
         switch (c) {
             case 'h':
                 print_usage(*argv);
@@ -217,6 +218,9 @@ int main(int argc, const char *const *argv) {
             case 'v':
                 debug = true;
                 break;
+            case 'V':
+                printf("ts3iddump version %s\n", VERSION);
+                return 0;
             default:
                 fprintf(stderr, "Unknown option given: '%c'\n", c);
                 break;
@@ -254,7 +258,7 @@ int main(int argc, const char *const *argv) {
         char temp[match - identity_in + 1];
         memcpy(temp, identity_in, match - identity_in);
         temp[match - identity_in] = 0;
-        counter = strtoll(temp, NULL, 10);
+        counter = strtoll(temp, nullptr, 10);
         debug_printf("  main: counter=%" PRIu64 "\n", counter);
     }
 
@@ -305,11 +309,11 @@ int main(int argc, const char *const *argv) {
     }
 
     size_t pubkey_len = PUBKEY_LEN_OBFUSCATED_B64;
-    unsigned char pubkey[pubkey_len];
+    pubkey_t pubkey[pubkey_len];
     create_pubkey(x, y, &pubkey_len, pubkey);
 
     size_t uuid_len = base64_get_encode_length(SHA_DIGEST_LENGTH);
-    unsigned char uuid[uuid_len + 1];
+    uuid_t uuid[uuid_len + 1];
     create_uuid(pubkey_len, pubkey, &uuid_len, uuid);
 
     printf("UUID=%s\n", uuid);
@@ -318,7 +322,7 @@ int main(int argc, const char *const *argv) {
     print_bignum("  y=%s\n", y);
     if (print_secret) {
         size_t privkey_len = PRIVKEY_LEN_OBFUSCATED_B64;
-        uint8_t privkey[privkey_len + 1];
+        privkey_t privkey[privkey_len + 1];
         memset(privkey, 0, privkey_len);
         create_privkey(x, y, z, &privkey_len, privkey);
         printf("PrivateKey=%s\n", privkey);
@@ -330,6 +334,6 @@ int main(int argc, const char *const *argv) {
     BN_free(z);
 
     printf("Counter=%" PRIu64 "\n", counter);
-    printf("SecurityLevel=%u\n", get_security_level((const char *) pubkey, counter));
+    printf("SecurityLevel=%u\n", get_security_level(pubkey, counter));
     return 0;
 }

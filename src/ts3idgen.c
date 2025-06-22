@@ -2,12 +2,14 @@
 #include "base64.h"
 #include "sha1.h"
 
+#include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
 #include <stdio.h>
+#include <string.h>
 
 static void print_usage(const char *name) {
     printf("Usage: %s [options]\n"
@@ -84,11 +86,11 @@ static EC_KEY *create_new_key() {
     abort:
     EC_KEY_free(ec_key);
     debug_printf("< create_new_key(): %p\n", NULL);
-    return NULL;
+    return nullptr;
 }
 
 static void write_identity(const char *name, const char *nickname, const char *output_file,
-                           uint64_t counter, const unsigned char *obfuscated) {
+                           uint64_t counter, const char *obfuscated) {
     debug_printf("> write_identity(%s, %s, %s, %" PRIu64", %s)\n",
                  name, nickname, output_file, counter, obfuscated);
     FILE *fp;
@@ -113,7 +115,7 @@ static void write_identity(const char *name, const char *nickname, const char *o
     debug_printf("< write_identity()\n");
 }
 
-static bool obfuscate_key(size_t privkey_len, uint8_t privkey[privkey_len]) {
+static bool obfuscate_key(size_t privkey_len, privkey_t privkey[privkey_len]) {
     debug_printf("> obfuscate_key(%" PRIu64 ", %p)\n",
                  privkey_len, privkey);
     bool result = true;
@@ -142,7 +144,7 @@ static bool obfuscate_key(size_t privkey_len, uint8_t privkey[privkey_len]) {
 
         EVP_MD_CTX *ctx;
         ctx = EVP_MD_CTX_new();
-        if (ctx == NULL) {
+        if (ctx == nullptr) {
             fprintf(stderr, "EVP_MD_CTX_new() failed\n");
             return false;
         }
@@ -150,7 +152,7 @@ static bool obfuscate_key(size_t privkey_len, uint8_t privkey[privkey_len]) {
         const EVP_MD *md = EVP_sha1();
         EVP_DigestInit(ctx, md);
         EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int) privkey_len - 20 : nullIndex);
-        EVP_DigestFinal(ctx, identityHash, NULL);
+        EVP_DigestFinal(ctx, identityHash, nullptr);
         EVP_MD_CTX_free(ctx);
         debug_print_hex("  obfuscate_key: identityHash", identityHash, SHA_DIGEST_LENGTH);
     }
@@ -172,9 +174,9 @@ static bool obfuscate_key(size_t privkey_len, uint8_t privkey[privkey_len]) {
     return result;
 }
 
-static uint64_t increase_level_to_min(size_t pubkey_len, uint8_t *pubkey) {
+static uint64_t increase_level_to_min(size_t pubkey_len, pubkey_t *pubkey) {
     debug_printf("> increase_level_to_min(%" PRIu64 ", %p)\n", pubkey_len, pubkey);
-    uint32_t state[5] __attribute__((aligned (16)));
+    uint32_t state[5];
     do_sha1_first_block(pubkey, state);
     uint32_t hash[5];
     uint64_t counter = 0;
@@ -191,22 +193,23 @@ static uint64_t increase_level_to_min(size_t pubkey_len, uint8_t *pubkey) {
     return counter;
 }
 
-int main(int argc, const char *const *argv) {
+int main(int argc, char** argv) {
     const char *name = "New identity";
     const char *nickname = "anonymous";
     const char *output_file = "-";
 
     static struct option long_options[] = {
-            {"help",     no_argument,       0, 'h'},
-            {"name",     required_argument, 0, 'i'},
-            {"nickname", required_argument, 0, 'n'},
-            {"output",   required_argument, 0, 'o'},
-            {"verbose",  no_argument,       0, 'v'},
-            {0, 0,                          0, 0}
+            {"help",     no_argument,       nullptr, 'h'},
+            {"name",     required_argument, nullptr, 'i'},
+            {"nickname", required_argument, nullptr, 'n'},
+            {"output",   required_argument, nullptr, 'o'},
+            {"verbose",  no_argument,       nullptr, 'v'},
+            {"version",  no_argument,       nullptr, 'V'},
+            {nullptr, 0,                    nullptr, 0}
     };
     bool missing_value = false;
     int c;
-    while ((c = getopt_long(argc, (char *const *) argv, "hi:n:o:v", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, (char *const *) argv, "hi:n:o:vV", long_options, nullptr)) != -1) {
         switch (c) {
             case 'h':
                 print_usage(*argv);
@@ -238,6 +241,9 @@ int main(int argc, const char *const *argv) {
             case 'v':
                 debug = true;
                 break;
+            case 'V':
+                printf("ts3idgen version %s\n", VERSION);
+                return 0;
             default:
                 fprintf(stderr, "Unknown option given: '%c'\n", optopt);
                 break;
@@ -280,26 +286,26 @@ int main(int argc, const char *const *argv) {
         return 1;
     }
 
-    if (!EC_POINT_get_affine_coordinates_GFp(EC_KEY_get0_group(ec_key), ec_pub, x, y, NULL)) {
+    if (!EC_POINT_get_affine_coordinates_GFp(EC_KEY_get0_group(ec_key), ec_pub, x, y, nullptr)) {
         fprintf(stderr, "EC_POINT_get_affine_coordinates_GFp() failed\n");
         return 1;
     }
 
     size_t pubkey_len = PUBKEY_LEN_OBFUSCATED_B64;
-    uint8_t pubkey[pubkey_len + 1];
+    pubkey_t pubkey[pubkey_len + 1];
     memset(pubkey, 0, pubkey_len);
     create_pubkey(x, y, &pubkey_len, pubkey);
     debug_printf("  main: pubkey=%s\n", pubkey);
 
     size_t uuid_len = base64_get_encode_length(SHA_DIGEST_LENGTH);
-    unsigned char uuid[uuid_len + 1];
+    uuid_t uuid[uuid_len + 1];
     create_uuid(pubkey_len, pubkey, &uuid_len, uuid);
     debug_printf("  main: uuid=%s\n", uuid);
 
     uint64_t counter = increase_level_to_min(pubkey_len, pubkey);
 
     size_t privkey_len = PRIVKEY_LEN_OBFUSCATED_B64;
-    uint8_t privkey[privkey_len + 1];
+    privkey_t privkey[privkey_len + 1];
     memset(privkey, 0, privkey_len);
     create_privkey(x, y, EC_KEY_get0_private_key(ec_key), &privkey_len, privkey);
     debug_printf("  main: privkey=%s\n", privkey);
@@ -310,8 +316,8 @@ int main(int argc, const char *const *argv) {
     }
 
     size_t obfuscated_len = base64_get_encode_length(privkey_len);
-    unsigned char obfuscated[obfuscated_len + 1];
-    base64_encode(privkey_len, privkey, &obfuscated_len, obfuscated);
+    char obfuscated[obfuscated_len + 1];
+    base64_encode(privkey_len, privkey, &obfuscated_len, (unsigned char*) obfuscated);
     debug_printf("  main: obfuscated=%s\n", obfuscated);
 
     write_identity(name, nickname, output_file, counter, obfuscated);
