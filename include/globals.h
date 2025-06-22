@@ -1,6 +1,7 @@
 #ifndef TS3IDTOOLS_GLOBALS_H
 #define TS3IDTOOLS_GLOBALS_H
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 

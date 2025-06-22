@@ -251,7 +251,7 @@ void print_arguments(const pubkey_t *pubkey, uint8_t threads, uint8_t level, uin
 
 uint64_t current_time_millis() {
     struct timeval time;
-    gettimeofday(&time, nullptr);
+    gettimeofday(&time, NULL);
     const uint64_t s1 = (uint64_t) (time.tv_sec) * 1000;
     const uint64_t s2 = (time.tv_usec / 1000);
     return s1 + s2;
@@ -296,7 +296,7 @@ void join_workers(uint8_t threads, const worker_settings *settings) {
 
 int main(int argc, char** argv) {
     const uint64_t start_time = current_time_millis();
-    pubkey_t *pubkey = nullptr;
+    pubkey_t *pubkey = NULL;
     uint8_t threads = 2;
     uint8_t level = 24;
     uint8_t blockSize = 21;
@@ -308,38 +308,38 @@ int main(int argc, char** argv) {
 #ifdef HAVE_SYS_RESOURCE_H
     const char *options = "b:c:hl:n:op:s:t:vV";
     static struct option long_options[] = {
-            {"blocksize",      optional_argument, nullptr, 'b'},
-            {"counter",        optional_argument, nullptr, 'c'},
-            {"help",           no_argument,       nullptr, 'h'},
-            {"publickey",      required_argument, nullptr, 'p'},
-            {"level",          optional_argument, nullptr, 'l'},
-            {"nice",           optional_argument, nullptr, 'n'},
-            {"one-shot",       no_argument,       nullptr, 'o'},
-            {"stats-interval", optional_argument, nullptr, 's'},
-            {"threads",        optional_argument, nullptr, 't'},
-            {"verbose",        no_argument,       nullptr, 'v'},
-            {"version",        no_argument,       nullptr, 'V'},
-            {nullptr,          0,                 nullptr, 0}
+            {"blocksize",      optional_argument, NULL, 'b'},
+            {"counter",        optional_argument, NULL, 'c'},
+            {"help",           no_argument,       NULL, 'h'},
+            {"publickey",      required_argument, NULL, 'p'},
+            {"level",          optional_argument, NULL, 'l'},
+            {"nice",           optional_argument, NULL, 'n'},
+            {"one-shot",       no_argument,       NULL, 'o'},
+            {"stats-interval", optional_argument, NULL, 's'},
+            {"threads",        optional_argument, NULL, 't'},
+            {"verbose",        no_argument,       NULL, 'v'},
+            {"version",        no_argument,       NULL, 'V'},
+            {NULL,          0,                 NULL, 0}
     };
 #else
     const char *options = "b:c:hl:op:s:t:vV";
     static struct option long_options[] = {
-            {"blocksize",      required_argument, nullptr, 'b'},
-            {"counter",        required_argument, nullptr, 'c'},
-            {"help",           no_argument,       nullptr, 'h'},
-            {"publickey",      required_argument, nullptr, 'p'},
-            {"level",          required_argument, nullptr, 'l'},
-            {"one-shot",       no_argument,       nullptr, 'o'},
-            {"stats-interval", required_argument, nullptr, 's'},
-            {"threads",        required_argument, nullptr, 't'},
-            {"verbose",        no_argument,       nullptr, 'v'},
-            {"version",        no_argument,       nullptr, 'V'},
-            {nullptr,          0,                 nullptr, 0}
+            {"blocksize",      required_argument, NULL, 'b'},
+            {"counter",        required_argument, NULL, 'c'},
+            {"help",           no_argument,       NULL, 'h'},
+            {"publickey",      required_argument, NULL, 'p'},
+            {"level",          required_argument, NULL, 'l'},
+            {"one-shot",       no_argument,       NULL, 'o'},
+            {"stats-interval", required_argument, NULL, 's'},
+            {"threads",        required_argument, NULL, 't'},
+            {"verbose",        no_argument,       NULL, 'v'},
+            {"version",        no_argument,       NULL, 'V'},
+            {NULL,          0,                 NULL, 0}
     };
 #endif
     bool missing_value = false;
     int c;
-    while ((c = getopt_long(argc, argv, options, long_options, nullptr)) != -1) {
+    while ((c = getopt_long(argc, argv, options, long_options, NULL)) != -1) {
         switch (c) {
             case 'b':
                 if (!optarg) {
@@ -347,7 +347,7 @@ int main(int argc, char** argv) {
                     missing_value = true;
                     continue;
                 }
-                blockSize = strtol(optarg, nullptr, 10);
+                blockSize = strtol(optarg, NULL, 10);
                 break;
             case 'c':
                 if (!optarg) {
@@ -355,7 +355,7 @@ int main(int argc, char** argv) {
                     missing_value = true;
                     continue;
                 }
-                start_counter = strtoll(optarg, nullptr, 10);
+                start_counter = strtoll(optarg, NULL, 10);
                 counter = start_counter;
                 break;
             case 'h':
@@ -367,11 +367,11 @@ int main(int argc, char** argv) {
                     missing_value = true;
                     continue;
                 }
-                level = strtol(optarg, nullptr, 10);
+                level = strtol(optarg, NULL, 10);
                 break;
 #ifdef HAVE_SYS_RESOURCE_H
                 case 'n':
-                    nice = (int) strtol(optarg, nullptr, 10);
+                    nice = (int) strtol(optarg, NULL, 10);
                     break;
 #endif
             case 'o':
@@ -386,7 +386,7 @@ int main(int argc, char** argv) {
                     missing_value = true;
                     continue;
                 }
-                statsInterval = strtol(optarg, nullptr, 10);
+                statsInterval = strtol(optarg, NULL, 10);
                 break;
             case 't':
                 if (!optarg) {
@@ -394,7 +394,7 @@ int main(int argc, char** argv) {
                     missing_value = true;
                     continue;
                 }
-                threads = strtol(optarg, nullptr, 10);
+                threads = strtol(optarg, NULL, 10);
                 break;
             case 'v':
                 debug = true;

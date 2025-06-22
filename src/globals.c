@@ -81,13 +81,13 @@ uint8_t get_security_level(pubkey_t* pubkey, uint64_t counter) {
     debug_printf("> get_security_level(%s, %" PRIu64 ")\n",
                  pubkey, counter);
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-    EVP_DigestInit_ex(ctx, EVP_sha1(), nullptr);
+    EVP_DigestInit_ex(ctx, EVP_sha1(), NULL);
     EVP_DigestUpdate(ctx, pubkey, strlen((const char*) pubkey));
     char buffer[32];
     snprintf(buffer, 32, "%" PRIu64, counter);
     EVP_DigestUpdate(ctx, buffer, strlen(buffer));
     uint32_t hash[SHA_DIGEST_LENGTH/4];
-    EVP_DigestFinal(ctx, (uint8_t*) hash, nullptr);
+    EVP_DigestFinal(ctx, (uint8_t*) hash, NULL);
     EVP_MD_CTX_free(ctx);
     debug_print_hex("  get_security_level: state", hash, SHA_DIGEST_LENGTH);
     const uint8_t result = leading_zero_bits(hash);
@@ -260,14 +260,14 @@ void create_uuid(size_t pubkey_len, pubkey_t pubkey[pubkey_len],
                  pubkey_len, pubkey, *uuid_len, uuid);
     uint8_t hash[SHA_DIGEST_LENGTH];
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-    if (ctx == nullptr) {
+    if (ctx == NULL) {
         fprintf(stderr, "EVP_MD_CTX_new() failed\n");
         return;
     }
     const EVP_MD *md = EVP_sha1();
     EVP_DigestInit(ctx, md);
     EVP_DigestUpdate(ctx, pubkey, pubkey_len);
-    EVP_DigestFinal(ctx, hash, nullptr);
+    EVP_DigestFinal(ctx, hash, NULL);
     EVP_MD_CTX_free(ctx);
     debug_print_hex("  create_uuid: hash", hash, SHA_DIGEST_LENGTH);
     base64_encode(SHA_DIGEST_LENGTH, hash, uuid_len, uuid);

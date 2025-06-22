@@ -86,7 +86,7 @@ static EC_KEY *create_new_key() {
     abort:
     EC_KEY_free(ec_key);
     debug_printf("< create_new_key(): %p\n", NULL);
-    return nullptr;
+    return NULL;
 }
 
 static void write_identity(const char *name, const char *nickname, const char *output_file,
@@ -144,7 +144,7 @@ static bool obfuscate_key(size_t privkey_len, privkey_t privkey[privkey_len]) {
 
         EVP_MD_CTX *ctx;
         ctx = EVP_MD_CTX_new();
-        if (ctx == nullptr) {
+        if (ctx == NULL) {
             fprintf(stderr, "EVP_MD_CTX_new() failed\n");
             return false;
         }
@@ -152,7 +152,7 @@ static bool obfuscate_key(size_t privkey_len, privkey_t privkey[privkey_len]) {
         const EVP_MD *md = EVP_sha1();
         EVP_DigestInit(ctx, md);
         EVP_DigestUpdate(ctx, buffer + 20, nullIndex < 0 ? (int) privkey_len - 20 : nullIndex);
-        EVP_DigestFinal(ctx, identityHash, nullptr);
+        EVP_DigestFinal(ctx, identityHash, NULL);
         EVP_MD_CTX_free(ctx);
         debug_print_hex("  obfuscate_key: identityHash", identityHash, SHA_DIGEST_LENGTH);
     }
@@ -199,17 +199,17 @@ int main(int argc, char** argv) {
     const char *output_file = "-";
 
     static struct option long_options[] = {
-            {"help",     no_argument,       nullptr, 'h'},
-            {"name",     required_argument, nullptr, 'i'},
-            {"nickname", required_argument, nullptr, 'n'},
-            {"output",   required_argument, nullptr, 'o'},
-            {"verbose",  no_argument,       nullptr, 'v'},
-            {"version",  no_argument,       nullptr, 'V'},
-            {nullptr, 0,                    nullptr, 0}
+            {"help",     no_argument,       NULL, 'h'},
+            {"name",     required_argument, NULL, 'i'},
+            {"nickname", required_argument, NULL, 'n'},
+            {"output",   required_argument, NULL, 'o'},
+            {"verbose",  no_argument,       NULL, 'v'},
+            {"version",  no_argument,       NULL, 'V'},
+            {NULL, 0,                    NULL, 0}
     };
     bool missing_value = false;
     int c;
-    while ((c = getopt_long(argc, (char *const *) argv, "hi:n:o:vV", long_options, nullptr)) != -1) {
+    while ((c = getopt_long(argc, (char *const *) argv, "hi:n:o:vV", long_options, NULL)) != -1) {
         switch (c) {
             case 'h':
                 print_usage(*argv);
@@ -286,7 +286,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    if (!EC_POINT_get_affine_coordinates_GFp(EC_KEY_get0_group(ec_key), ec_pub, x, y, nullptr)) {
+    if (!EC_POINT_get_affine_coordinates_GFp(EC_KEY_get0_group(ec_key), ec_pub, x, y, NULL)) {
         fprintf(stderr, "EC_POINT_get_affine_coordinates_GFp() failed\n");
         return 1;
     }
