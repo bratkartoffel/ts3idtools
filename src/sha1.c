@@ -1,11 +1,17 @@
 #include "globals.h"
 #include "sha1.h"
 
-#include <byteswap.h>
+#if defined(__linux__)
+#  include <endian.h>
+#elif defined(__WIN32)
+#    define be32toh(x) _byteswap_ulong(x)
+#elif defined(__APPLE__)
+#  include <libkern/OSByteOrder.h>
+#  define be32toh(x) OSSwapBigToHostInt32(x)
+#endif
+
 #include <string.h>
 #include <immintrin.h>
-
-bool initialized = false;
 
 void do_sha1_first_block(uint8_t data[128], uint32_t state[5]) {
     state[0] = 0x67452301;
@@ -36,11 +42,11 @@ void do_sha1_second_block_without_cpu_ext(uint8_t data[128], size_t len, const u
     memcpy(hash, state, SHA_DIGEST_LENGTH);
     sha1_compress_software(hash, block);
 
-    hash[0] = bswap_32(hash[0]);
-    hash[1] = bswap_32(hash[1]);
-    hash[2] = bswap_32(hash[2]);
-    hash[3] = bswap_32(hash[3]);
-    hash[4] = bswap_32(hash[4]);
+    hash[0] = be32toh(hash[0]);
+    hash[1] = be32toh(hash[1]);
+    hash[2] = be32toh(hash[2]);
+    hash[3] = be32toh(hash[3]);
+    hash[4] = be32toh(hash[4]);
 #if 0
     // for debugging / verifying optimizations
     debug_printf("===========================\n");
@@ -62,11 +68,11 @@ void do_sha1_second_block_with_cpu_ext(uint8_t data[128], size_t len, const uint
     memcpy(hash, state, SHA_DIGEST_LENGTH);
     sha1_compress_cpu(hash, block);
 
-    hash[0] = bswap_32(hash[0]);
-    hash[1] = bswap_32(hash[1]);
-    hash[2] = bswap_32(hash[2]);
-    hash[3] = bswap_32(hash[3]);
-    hash[4] = bswap_32(hash[4]);
+    hash[0] = be32toh(hash[0]);
+    hash[1] = be32toh(hash[1]);
+    hash[2] = be32toh(hash[2]);
+    hash[3] = be32toh(hash[3]);
+    hash[4] = be32toh(hash[4]);
 #if 0
     // for debugging / verifying optimizations
     debug_printf("===========================\n");
