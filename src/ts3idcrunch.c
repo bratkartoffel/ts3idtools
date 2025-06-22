@@ -24,7 +24,7 @@ typedef struct worker_settings_t {
     uint8_t pubkey_len;
     uint8_t one_shot;
     uint32_t block_size;
-    pubkey_t pubkey[PUBKEY_LEN_B64];
+    ts3_pubkey_t pubkey[PUBKEY_LEN_B64];
 } worker_settings;
 
 typedef struct stats_settings_t {
@@ -151,7 +151,7 @@ void print_usage(const char *appName) {
            "\n", appName, VERSION);
 }
 
-bool validate_arguments(pubkey_t *pubkey, uint8_t threads, uint8_t level, uint8_t blockSize,
+bool validate_arguments(ts3_pubkey_t *pubkey, uint8_t threads, uint8_t level, uint8_t blockSize,
                                uint16_t statsInterval, int nice, bool one_shot) {
     debug_printf("> validate_arguments(%s, %u, %u, %u, %u, %i, %u)\n",
                  (const char*) pubkey, threads, level, blockSize, statsInterval, nice, one_shot);
@@ -208,7 +208,7 @@ bool set_nice(int nice) {
 }
 
 bool start_workers(uint8_t threads, worker_settings settings[threads],
-                          const pubkey_t *pubkey, uint8_t blockSize, uint8_t level, bool one_shot) {
+                          const ts3_pubkey_t *pubkey, uint8_t blockSize, uint8_t level, bool one_shot) {
     debug_printf("> start_workers(%u, %p, %s, %u, %u, %u)\n",
                  threads, (void *) settings, (const char*) pubkey, blockSize, level, one_shot);
     bool result = true;
@@ -231,7 +231,7 @@ bool start_workers(uint8_t threads, worker_settings settings[threads],
     return result;
 }
 
-void print_arguments(const pubkey_t *pubkey, uint8_t threads, uint8_t level, uint8_t blockSize,
+void print_arguments(const ts3_pubkey_t *pubkey, uint8_t threads, uint8_t level, uint8_t blockSize,
                             uint16_t statsInterval, int nice, bool one_shot) {
     debug_printf("> print_arguments(%s, %u, %u, %u, %u, %i, %u)\n",
                  (const char*) pubkey, threads, level, blockSize, statsInterval, nice, one_shot);
@@ -296,7 +296,7 @@ void join_workers(uint8_t threads, const worker_settings *settings) {
 
 int main(int argc, char** argv) {
     const uint64_t start_time = current_time_millis();
-    pubkey_t *pubkey = NULL;
+    ts3_pubkey_t *pubkey = NULL;
     uint8_t threads = 2;
     uint8_t level = 24;
     uint8_t blockSize = 21;
@@ -378,7 +378,7 @@ int main(int argc, char** argv) {
                 one_shot = true;
                 break;
             case 'p':
-                pubkey = (pubkey_t*) optarg;
+                pubkey = (ts3_pubkey_t*) optarg;
                 break;
             case 's':
                 if (!optarg) {

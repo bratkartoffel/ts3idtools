@@ -77,7 +77,7 @@ size_t increment_counter(uint8_t data[PUBKEY_LEN_B64], size_t pubkey_length, siz
     return complete_length + 1;
 }
 
-uint8_t get_security_level(pubkey_t* pubkey, uint64_t counter) {
+uint8_t get_security_level(ts3_pubkey_t* pubkey, uint64_t counter) {
     debug_printf("> get_security_level(%s, %" PRIu64 ")\n",
                  pubkey, counter);
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
@@ -132,7 +132,7 @@ bool ts3_xor(size_t a_len, const uint8_t *a, int aoffs,
 }
 
 void create_pubkey(const BIGNUM *x, const BIGNUM *y,
-                   size_t *pubkey_len, pubkey_t pubkey[*pubkey_len]) {
+                   size_t *pubkey_len, ts3_pubkey_t pubkey[*pubkey_len]) {
     debug_printf("> create_pubkey(%p, %p, %" PRIu64 ", %p)\n",
                  (void *) x, (void *) y, *pubkey_len, pubkey);
     uint8_t buffer[512];
@@ -188,7 +188,7 @@ void create_pubkey(const BIGNUM *x, const BIGNUM *y,
 }
 
 void create_privkey(const BIGNUM *x, const BIGNUM *y, const BIGNUM *z,
-                    size_t *privkey_len, privkey_t privkey[*privkey_len]) {
+                    size_t *privkey_len, ts3_privkey_t privkey[*privkey_len]) {
     debug_printf("> create_privkey(%p, %p, %p, %" PRIu64 ", %p)\n",
                  (void *) x, (void *) y, (void *) z, *privkey_len, privkey);
     uint8_t buffer[512];
@@ -254,8 +254,8 @@ void create_privkey(const BIGNUM *x, const BIGNUM *y, const BIGNUM *z,
     debug_printf("< create_privkey(-, -, %" PRIu64 ", -)\n", *privkey_len);
 }
 
-void create_uuid(size_t pubkey_len, pubkey_t pubkey[pubkey_len],
-                 size_t *uuid_len, uuid_t uuid[*uuid_len]) {
+void create_uuid(size_t pubkey_len, ts3_pubkey_t pubkey[pubkey_len],
+                 size_t *uuid_len, ts3_uuid_t uuid[*uuid_len]) {
     debug_printf("> create_uuid(%" PRIu64 ", %p, %" PRIu64 ", %p)\n",
                  pubkey_len, pubkey, *uuid_len, uuid);
     uint8_t hash[SHA_DIGEST_LENGTH];

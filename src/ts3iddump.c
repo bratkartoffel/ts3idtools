@@ -309,11 +309,11 @@ int main(int argc, char** argv) {
     }
 
     size_t pubkey_len = PUBKEY_LEN_OBFUSCATED_B64;
-    pubkey_t pubkey[pubkey_len];
+    ts3_pubkey_t pubkey[pubkey_len];
     create_pubkey(x, y, &pubkey_len, pubkey);
 
     size_t uuid_len = base64_get_encode_length(SHA_DIGEST_LENGTH);
-    uuid_t uuid[uuid_len + 1];
+    ts3_uuid_t uuid[uuid_len + 1];
     create_uuid(pubkey_len, pubkey, &uuid_len, uuid);
 
     printf("UUID=%s\n", uuid);
@@ -322,7 +322,7 @@ int main(int argc, char** argv) {
     print_bignum("  y=%s\n", y);
     if (print_secret) {
         size_t privkey_len = PRIVKEY_LEN_OBFUSCATED_B64;
-        privkey_t privkey[privkey_len + 1];
+        ts3_privkey_t privkey[privkey_len + 1];
         memset(privkey, 0, privkey_len);
         create_privkey(x, y, z, &privkey_len, privkey);
         printf("PrivateKey=%s\n", privkey);

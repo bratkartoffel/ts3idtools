@@ -115,7 +115,7 @@ static void write_identity(const char *name, const char *nickname, const char *o
     debug_printf("< write_identity()\n");
 }
 
-static bool obfuscate_key(size_t privkey_len, privkey_t privkey[privkey_len]) {
+static bool obfuscate_key(size_t privkey_len, ts3_privkey_t privkey[privkey_len]) {
     debug_printf("> obfuscate_key(%" PRIu64 ", %p)\n",
                  privkey_len, privkey);
     bool result = true;
@@ -174,7 +174,7 @@ static bool obfuscate_key(size_t privkey_len, privkey_t privkey[privkey_len]) {
     return result;
 }
 
-static uint64_t increase_level_to_min(size_t pubkey_len, pubkey_t *pubkey) {
+static uint64_t increase_level_to_min(size_t pubkey_len, ts3_pubkey_t *pubkey) {
     debug_printf("> increase_level_to_min(%" PRIu64 ", %p)\n", pubkey_len, pubkey);
     uint32_t state[5];
     do_sha1_first_block(pubkey, state);
@@ -292,20 +292,20 @@ int main(int argc, char** argv) {
     }
 
     size_t pubkey_len = PUBKEY_LEN_OBFUSCATED_B64;
-    pubkey_t pubkey[pubkey_len + 1];
+    ts3_pubkey_t pubkey[pubkey_len + 1];
     memset(pubkey, 0, pubkey_len);
     create_pubkey(x, y, &pubkey_len, pubkey);
     debug_printf("  main: pubkey=%s\n", pubkey);
 
     size_t uuid_len = base64_get_encode_length(SHA_DIGEST_LENGTH);
-    uuid_t uuid[uuid_len + 1];
+    ts3_uuid_t uuid[uuid_len + 1];
     create_uuid(pubkey_len, pubkey, &uuid_len, uuid);
     debug_printf("  main: uuid=%s\n", uuid);
 
     uint64_t counter = increase_level_to_min(pubkey_len, pubkey);
 
     size_t privkey_len = PRIVKEY_LEN_OBFUSCATED_B64;
-    privkey_t privkey[privkey_len + 1];
+    ts3_privkey_t privkey[privkey_len + 1];
     memset(privkey, 0, privkey_len);
     create_privkey(x, y, EC_KEY_get0_private_key(ec_key), &privkey_len, privkey);
     debug_printf("  main: privkey=%s\n", privkey);

@@ -37,13 +37,13 @@
         }                                                    \
     } while (0)
 
-typedef unsigned char privkey_t;
-typedef unsigned char pubkey_t;
-typedef unsigned char uuid_t;
+typedef unsigned char ts3_privkey_t;
+typedef unsigned char ts3_pubkey_t;
+typedef unsigned char ts3_uuid_t;
 
 extern bool debug;
 
-uint8_t get_security_level(pubkey_t* pubkey, uint64_t counter);
+uint8_t get_security_level(ts3_pubkey_t* pubkey, uint64_t counter);
 
 uint8_t leading_zero_bits(uint32_t hash[5]);
 
@@ -57,13 +57,13 @@ bool ts3_xor(size_t a_len, const uint8_t *a, int aoffs,
              size_t outBuf_len, uint8_t *outBuf, int outOffs);
 
 void create_pubkey(const BIGNUM *x, const BIGNUM *y,
-                   size_t *pubkey_len, pubkey_t pubkey[*pubkey_len]);
+                   size_t *pubkey_len, ts3_pubkey_t pubkey[*pubkey_len]);
 
 void create_privkey(const BIGNUM *x, const BIGNUM *y, const BIGNUM *z,
-                    size_t *privkey_len, privkey_t privkey[*privkey_len]);
+                    size_t *privkey_len, ts3_privkey_t privkey[*privkey_len]);
 
-void create_uuid(size_t pubkey_len, pubkey_t pubkey[pubkey_len],
-                 size_t *uuid_len, uuid_t uuid[*uuid_len]);
+void create_uuid(size_t pubkey_len, ts3_pubkey_t pubkey[pubkey_len],
+                 size_t *uuid_len, ts3_uuid_t uuid[*uuid_len]);
 
 void print_bignum(const char *format, const BIGNUM *num);
 
