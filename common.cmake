@@ -27,10 +27,6 @@ if (NOT WIN32)
   target_compile_definitions(${PROJECT_NAME} PUBLIC -D_FORTIFY_SOURCE=2)
 endif ()
 
-if (NOT APPLE AND NOT WIN32)
-  target_compile_options(${PROJECT_NAME} PUBLIC -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Bsymbolic-functions)
-  target_link_libraries(${PROJECT_NAME} -Wl,-Bstatic)
-endif ()
 target_link_libraries(${PROJECT_NAME} crypto pthread)
 target_include_directories(${PROJECT_NAME} PUBLIC libressl/include)
 

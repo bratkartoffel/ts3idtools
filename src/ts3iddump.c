@@ -112,37 +112,32 @@ int main(int argc, char** argv)
 
     print_arguments(identity_in, print_secret);
 
-    ts3_identity* id = calloc(1, sizeof(ts3_identity));
-    if (!id)
+    ts3_identity id = {0};
+    if (!decode_identity(identity_in, &id))
     {
-        fprintf(stderr, "calloc(id) failed\n");
-        return 1;
-    }
-
-    if (!decode_identity(identity_in, id))
-    {
+        free_identity(&id);
         fprintf(stderr, "Failed to parse identity\n");
         return 1;
     }
 
-    char* uuid_str = strndup((char*) id->uuid, id->uuid_len);
+    char* uuid_str = strndup((char*)id.uuid, id.uuid_len);
     printf("UUID=%s\n", uuid_str);
     free(uuid_str);
 
-    char* pubkey_str = strndup((char*) id->pubkey, id->pubkey_len);
+    char* pubkey_str = strndup((char*)id.pubkey, id.pubkey_len);
     printf("PublicKey=%s\n", pubkey_str);
     free(pubkey_str);
 
     if (print_secret)
     {
-        char* privkey_str = strndup((char*) id->privkey, id->privkey_len);
+        char* privkey_str = strndup((char*)id.privkey, id.privkey_len);
         printf("PrivateKey=%s\n", privkey_str);
         free(privkey_str);
     }
 
-    printf("Counter=%" PRIu64 "\n", id->counter);
-    printf("SecurityLevel=%u\n", get_security_level(id));
+    printf("Counter=%" PRIu64 "\n", id.counter);
+    printf("SecurityLevel=%u\n", get_security_level(&id));
 
-    // free_identity(id);
+    free_identity(&id);
     return 0;
 }

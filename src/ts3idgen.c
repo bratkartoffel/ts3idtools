@@ -68,8 +68,10 @@ static void print_arguments(const char* name, const char* nickname, const char* 
 static EC_KEY* create_new_key()
 {
     debug_printf("> create_new_key()\n");
-    EC_KEY* ec_key = EC_KEY_new();
+    EC_KEY* ec_key = NULL;
+    EC_GROUP* ec_group = NULL;
 
+    ec_key = EC_KEY_new();
     debug_printf("  create_new_key: ec_key=%p\n", (void *) ec_key);
     if (!ec_key)
     {
@@ -77,7 +79,7 @@ static EC_KEY* create_new_key()
         goto abort;
     }
 
-    EC_GROUP* ec_group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
+    ec_group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
     debug_printf("  create_new_key: ec_group=%p\n", (void *) ec_group);
     if (!ec_group)
     {
@@ -99,11 +101,13 @@ static EC_KEY* create_new_key()
         goto abort;
     }
 
+    EC_GROUP_free(ec_group);
     debug_printf("< create_new_key(): %p\n", (void *) ec_key);
     return ec_key;
 
 abort:
-    EC_KEY_free(ec_key);
+    if (ec_group) EC_GROUP_free(ec_group);
+    if (ec_key) EC_KEY_free(ec_key);
     debug_printf("< create_new_key(): %p\n", NULL);
     return NULL;
 }
@@ -167,6 +171,7 @@ static void increase_level_to_min(ts3_identity* identity, uint8_t target)
     debug_printf("\n");
 
     identity->counter = counter;
+    free(data);
     debug_printf("< increase_level_to_min(): %" PRIu64 "\n", counter);
 }
 
@@ -342,6 +347,9 @@ int main(int argc, char** argv)
     debug_printf("  main: encoded=%s\n", encoded);
 
     write_identity(name, nickname, output_file, id->counter, encoded);
+    free(encoded);
+    free_identity(id);
+    free(id);
 
     fflush(stdout);
     return 0;

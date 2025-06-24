@@ -39,7 +39,7 @@ typedef struct stats_settings_t
 
 atomic_uint_fast64_t counter = 0;
 volatile bool do_stop = false;
-uint64_t results[SHA_DIGEST_LENGTH * 8 + 1];
+uint64_t results[SHA_DIGEST_LENGTH * 8 + 1] = {0};
 
 void* stats_loop(void* arg)
 {
@@ -91,8 +91,8 @@ void* stats_loop(void* arg)
 void* worker_loop_no_cpuext(void* arg)
 {
     debug_printf("> worker_loop_no_cpuext(%p)\n", arg);
-    uint32_t first_block_state[5];
-    uint32_t hash[5];
+    uint32_t first_block_state[5] = {0};
+    uint32_t hash[5] = {0};
     worker_settings* settings = arg;
     do_sha1_first_block(settings->pubkey, first_block_state);
     // no logging after this point, performance sensitive!
@@ -123,7 +123,7 @@ void* worker_loop_no_cpuext(void* arg)
             {
                 if (results[calc_level] == 0)
                 {
-                    printf("Thread[%u]: Found level=%u with counter %" PRIu64 "!\n",
+                    printf("Thread[%" PRIu8 "]: Found level=%" PRIu8 " with counter %" PRIu64 "!\n",
                            settings->worker_id, calc_level, i);
                     fflush(stdout);
                     results[calc_level] = i;
@@ -234,13 +234,13 @@ static bool validate_arguments(ts3_pubkey_t* pubkey, const char* identity, uint8
     debug_printf("> validate_arguments(%s, %s, %u, %u, %u, %u, %i, %u)\n",
                  (const char*) pubkey, identity, threads, level, blockSize, statsInterval, nice, one_shot);
     bool result = true;
-    if (!pubkey && !identity)
+    if (!*pubkey && !identity)
     {
         fprintf(stderr, "Missing required argument: 'public key' or 'identity'\n");
         result = false;
     }
 
-    if (pubkey)
+    if (*pubkey)
     {
         if (strncmp((const char*)pubkey, "ME", 2) != 0)
         {
@@ -267,7 +267,7 @@ static bool validate_arguments(ts3_pubkey_t* pubkey, const char* identity, uint8
         fprintf(stderr, "Invalid argument: 'level' must be between 16 and 128\n");
         result = false;
     }
-    if (blockSize < 19 || blockSize > 26)
+    if (blockSize < 4 || blockSize > 26)
     {
         fprintf(stderr, "Invalid argument: 'blockSize' must be between 19 and 26\n");
         result = false;
@@ -418,7 +418,8 @@ int main(int argc, char** argv)
 {
     const uint64_t start_time = current_time_millis();
     char* identity = NULL;
-    ts3_pubkey_t* pubkey = NULL;
+    ts3_pubkey_t pubkey[MAX_MSG_LENGTH_2_BLOCKS] = {0};
+    size_t pubkey_len = 0;
     uint8_t threads = 2;
     uint8_t level = 24;
     uint8_t blockSize = 21;
@@ -528,7 +529,8 @@ int main(int argc, char** argv)
                 missing_value = true;
                 continue;
             }
-            pubkey = (ts3_pubkey_t*)optarg;
+            pubkey_len = strlen(optarg);
+            memcpy(pubkey, optarg, pubkey_len);
             break;
         case 's':
             if (!optarg)
@@ -589,7 +591,8 @@ int main(int argc, char** argv)
             fprintf(stderr, "decode_identity() failed\n");
             return 1;
         }
-        pubkey = id.pubkey;
+        pubkey_len = id.pubkey_len;
+        memcpy(pubkey, id.pubkey, pubkey_len);
     }
     else
     {
@@ -600,10 +603,11 @@ int main(int argc, char** argv)
     }
 
     {
-        char* temp = strndup((char*) id.uuid, id.uuid_len);
+        char* temp = strndup((char*)id.uuid, id.uuid_len);
         printf("Crunching on UID: %s\n", temp);
         free(temp);
     }
+    free_identity(&id);
 
     worker_settings settings[threads];
     memset(settings, 0, threads * sizeof(worker_settings));
@@ -622,6 +626,7 @@ int main(int argc, char** argv)
         fprintf(stderr, "thrd_create(stats_loop) failed\n");
         return 1;
     }
+    pthread_detach(stats_thread);
 
     printf("Press CTRL + C to cancel generation...\n");
     fflush(stdout);

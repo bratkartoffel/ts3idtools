@@ -69,6 +69,7 @@ static bool asn1_parse(ts3_identity* identity, BIGNUM* x, BIGNUM* y, BIGNUM* z)
         BN_free(ignored);
         return false;
     }
+    BN_free(ignored);
 
     if (!asn1_parse_integer(&asn1data_pos, length, x))
     {
@@ -89,7 +90,7 @@ static bool asn1_parse(ts3_identity* identity, BIGNUM* x, BIGNUM* y, BIGNUM* z)
     }
 
     // sanity check, everything parsed?
-    if (*asn1data_pos != 0)
+    if (asn1data_pos != identity->asn1data + identity->asn1data_len)
     {
         debug_printf("  asn1_parse: dangling data: %c\n", *asn1data_pos);
     }
@@ -99,9 +100,9 @@ static bool asn1_parse(ts3_identity* identity, BIGNUM* x, BIGNUM* y, BIGNUM* z)
 }
 
 static bool ts3_xor(size_t a_len, const uint8_t* a, int aoffs,
-             size_t b_len, const uint8_t* b, int boffs,
-             size_t len,
-             size_t outBuf_len, uint8_t* outBuf, int outOffs)
+                    size_t b_len, const uint8_t* b, int boffs,
+                    size_t len,
+                    size_t outBuf_len, uint8_t* outBuf, int outOffs)
 {
     debug_printf("> ts3_xor(%" PRIu64 ", %p, %i, %" PRIu64 ", %p, %i, %" PRIu64 ", %" PRIu64 ", %p, %i)\n",
                  a_len, (void *) a, aoffs, b_len, (void *) b, boffs, len, outBuf_len, (void *) outBuf, outOffs);
@@ -372,7 +373,7 @@ bool create_pubkey(ts3_identity* identity, const BIGNUM* x, const BIGNUM* y)
     debug_printf("  create_pubkey: seq_length=%u\n", buffer[1]);
 
     identity->pubkey_len = base64_get_encode_length(buffer_pos);
-    identity->pubkey = malloc(identity->pubkey_len);
+    identity->pubkey = malloc(identity->pubkey_len + 1);
     bool result = base64_encode(buffer_pos, buffer, &identity->pubkey_len, identity->pubkey);
     debug_printf("< create_pubkey(): %d\n", result);
     return result;
@@ -442,7 +443,7 @@ bool create_privkey(ts3_identity* identity, const BIGNUM* x, const BIGNUM* y, co
     debug_printf("  create_pubkey: seq_length=%u\n", buffer[1]);
 
     identity->privkey_len = base64_get_encode_length(buffer_pos);
-    identity->privkey = malloc(identity->privkey_len);
+    identity->privkey = malloc(identity->privkey_len + 1);
     bool result = base64_encode(buffer_pos, buffer, &identity->privkey_len, identity->privkey);
     debug_printf("< create_privkey(): %d\n", result);
     return result;
@@ -470,7 +471,7 @@ bool create_uuid(ts3_identity* identity)
     debug_print_hex("  create_uuid: hash", hash, SHA_DIGEST_LENGTH);
 
     identity->uuid_len = base64_get_encode_length(SHA_DIGEST_LENGTH);
-    identity->uuid = malloc(identity->uuid_len);
+    identity->uuid = malloc(identity->uuid_len + 1);
     bool result = base64_encode(SHA_DIGEST_LENGTH, hash, &identity->uuid_len, identity->uuid);
     debug_printf("< create_uuid(): %d\n", result);
     return result;
