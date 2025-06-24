@@ -62,12 +62,12 @@ static void print_arguments(const char* name, const char* nickname, const char* 
     debug_printf("  print_arguments: nickname=%s\n", nickname);
     debug_printf("  print_arguments: output_file=%s\n", output_file);
     debug_printf("  print_arguments: level=%u\n", level);
-    debug_printf("< print_arguments()\n");
+    debug_print("< print_arguments()\n");
 }
 
 static EC_KEY* create_new_key()
 {
-    debug_printf("> create_new_key()\n");
+    debug_print("> create_new_key()\n");
     EC_KEY* ec_key = NULL;
     EC_GROUP* ec_group = NULL;
 
@@ -141,7 +141,7 @@ static void write_identity(const char* name, const char* nickname, const char* o
                 nickname);
         if (fp != stdout) fclose(fp);
     }
-    debug_printf("< write_identity()\n");
+    debug_print("< write_identity()\n");
 }
 
 static void increase_level_to_min(ts3_identity* identity, uint8_t target)
@@ -155,20 +155,14 @@ static void increase_level_to_min(ts3_identity* identity, uint8_t target)
     uint32_t hash[5];
     uint64_t counter = 0;
     uint8_t level;
-    debug_printf("  crunch: ");
     do
     {
         counter++;
         size_t data_len = append_counter(data, identity->pubkey_len, counter);
         do_sha1_second_block_without_cpu_ext(data, data_len, state, hash);
         level = leading_zero_bits(hash);
-        if (counter % 10 == 0)
-        {
-            debug_printf(".");
-        }
     }
     while (level < target);
-    debug_printf("\n");
 
     identity->counter = counter;
     free(data);

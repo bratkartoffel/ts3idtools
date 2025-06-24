@@ -196,7 +196,7 @@ static void sigHandler(int signal)
 {
     debug_printf("> sigHandler(%i)\n", signal);
     do_stop = true;
-    debug_printf("< sigHandler\n");
+    debug_print("< sigHandler\n");
 }
 
 static void print_usage(const char* appName)
@@ -308,7 +308,7 @@ bool start_workers(uint8_t threads, worker_settings settings[threads],
                  threads, (void *) settings, (const char*) pubkey, blockSize, level, one_shot);
 
     void*(*worker_func)(void*);
-    if (check_for_intel_sha_extensions())
+    if (supports_sha_ni())
     {
         worker_func = worker_loop_cpuext;
     }
@@ -358,7 +358,7 @@ void print_arguments(const ts3_pubkey_t* pubkey, const char* identity, uint8_t t
 #ifdef HAVE_SYS_RESOURCE_H
     debug_printf("  print_arguments: nice=%i\n", nice);
 #endif
-    debug_printf("< print_arguments()\n");
+    debug_print("< print_arguments()\n");
 }
 
 uint64_t current_time_millis()
@@ -411,7 +411,7 @@ void join_workers(uint8_t threads, const worker_settings* settings)
         }
         debug_printf("> worker[%d] handled %d blocks\n", i, settings[i].res_block_count);
     }
-    debug_printf("< join_workers()\n");
+    debug_print("< join_workers()\n");
 }
 
 int main(int argc, char** argv)

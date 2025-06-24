@@ -4,12 +4,15 @@ target_compile_options(${PROJECT_NAME} PUBLIC
         -Wall
         -Wextra
         -pedantic
-        -Wl,-z,relro
-        -Wl,-z,now
-        -Wl,-z,noexecstack
         -Bsymbolic-functions
 )
-
+if (NOT APPLE)
+  target_compile_options(${PROJECT_NAME} PUBLIC
+          -Wl,-z,relro
+          -Wl,-z,now
+          -Wl,-z,noexecstack
+  )
+endif ()
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DVERSION="${VERSION}")
 
 check_symbol_exists(strndup "string.h" HAVE_STRNDUP)

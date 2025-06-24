@@ -48,7 +48,7 @@ static void print_arguments(const char* identity_in, bool print_secret)
     debug_printf("> print_arguments(%s, %u)\n", identity_in, print_secret);
     debug_printf("  print_arguments: identity_in=%s\n", identity_in);
     debug_printf("  print_arguments: print_secret=%u\n", print_secret);
-    debug_printf("< print_arguments()\n");
+    debug_print("< print_arguments\n");
 }
 
 int main(int argc, char** argv)

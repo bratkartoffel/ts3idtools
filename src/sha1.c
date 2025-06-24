@@ -1,5 +1,4 @@
-#include "globals.h"
-#include "sha1.h"
+#include <string.h>
 
 #if defined(__linux__)
 #  include <endian.h>
@@ -7,9 +6,16 @@
 #elif defined(__WIN32)
 #  include <immintrin.h>
 #  define be32toh(x) _byteswap_ulong(x)
+#elif defined(__APPLE__)
+#  if !defined(__arch64__) && !defined(__arm64__)
+#    include <immintrin.h>
+#  endif
+#  include <libkern/OSByteOrder.h>
+#  define be32toh(x) OSSwapBigToHostInt32(x)
 #endif
 
-#include <string.h>
+#include "globals.h"
+#include "sha1.h"
 
 void do_sha1_first_block(uint8_t data[128], uint32_t state[5])
 {
@@ -22,9 +28,9 @@ void do_sha1_first_block(uint8_t data[128], uint32_t state[5])
     sha1_compress_software(state, data);
 #if 0
     // for debugging / verifying optimizations
-    debug_printf("===========================\n");
+    debug_print("===========================");
     debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
-    debug_printf("===========================\n");
+    debug_print("===========================");
 #endif
 }
 
@@ -49,9 +55,9 @@ void do_sha1_second_block_without_cpu_ext(uint8_t data[128], size_t len, const u
     hash[4] = be32toh(hash[4]);
 #if 0
     // for debugging / verifying optimizations
-    debug_printf("===========================\n");
+    debug_print("===========================");
     debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
-    debug_printf("===========================\n");
+    debug_print("===========================");
 #endif
 }
 
@@ -67,7 +73,11 @@ void do_sha1_second_block_with_cpu_ext(uint8_t data[128], size_t len, const uint
     block[63] = len & 0xFF;
 
     memcpy(hash, state, SHA_DIGEST_LENGTH);
+#if !defined(__arch64__) && !defined(__arm64__)
     sha1_compress_cpu(hash, block);
+#else
+    sha1_compress_software(hash, block);
+#endif
 
     hash[0] = be32toh(hash[0]);
     hash[1] = be32toh(hash[1]);
@@ -76,14 +86,15 @@ void do_sha1_second_block_with_cpu_ext(uint8_t data[128], size_t len, const uint
     hash[4] = be32toh(hash[4]);
 #if 0
     // for debugging / verifying optimizations
-    debug_printf("===========================\n");
+    debug_print("===========================");
     debug_print_hex("hash", hash, SHA_DIGEST_LENGTH);
-    debug_printf("===========================\n");
+    debug_print("===========================");
 #endif
 }
 
 void sha1_compress_cpu(uint32_t digest[5], const uint8_t* block)
 {
+#if !defined(__arch64__) && !defined(__arm64__)
     __m128i abcd, e0 = {0}, e1;
     __m128i abcd_save, e_save;
     __m128i msg0, msg1, msg2, msg3;
@@ -265,6 +276,7 @@ void sha1_compress_cpu(uint32_t digest[5], const uint8_t* block)
     abcd = _mm_shuffle_epi32(abcd, 0x1B);
     _mm_store_si128((__m128i*)digest, abcd);
     *(digest + 4) = _mm_extract_epi32(e0, 3);
+#endif
 }
 
 #define ROUNDTAIL(a, b, e, f, i, k)  \

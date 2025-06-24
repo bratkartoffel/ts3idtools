@@ -77,6 +77,11 @@ void testIncrementCounterNewDigit()
 void testSha1SameResults()
 {
     fprintf(stderr, "Starting %s\n", __func__);
+    if (!supports_sha_ni())
+    {
+        fprintf(stderr, "skipping\n");
+        return;
+    }
     uint8_t data[128] = {0};
     strcpy((char*)data, "foobar");
     uint32_t state[5] = {0};
@@ -96,8 +101,9 @@ void testGetSecurityLevel()
     fprintf(stderr, "Starting %s\n", __func__);
     ts3_identity id;
     id.counter = 351;
-    id.pubkey = "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=";
-    id.pubkey_len = strlen((char*) id.pubkey);
+    id.pubkey =
+        "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=";
+    id.pubkey_len = strlen((char*)id.pubkey);
     uint8_t level = get_security_level(&id);
     debug_printf("level=%u\n", level);
     assert(level == 8);
@@ -108,8 +114,9 @@ void testGetSecurityLevelOver32()
     fprintf(stderr, "Starting %s\n", __func__);
     ts3_identity id;
     id.counter = 22023984812;
-    id.pubkey = "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=";
-    id.pubkey_len = strlen((char*) id.pubkey);
+    id.pubkey =
+        "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=";
+    id.pubkey_len = strlen((char*)id.pubkey);
     uint8_t level = get_security_level(&id);
     debug_printf("level=%u\n", level);
     assert(level == 37);
@@ -196,6 +203,9 @@ int main(int argc, const char** argv)
     ((void)argc);
     ((void)argv);
     debug = true;
+
+    debug_printf("With sha intrinsics?: %u\n", supports_sha_ni());
+
     testSha1SingleRound();
     testAppendCounter();
     testIncrementCounterSimple();

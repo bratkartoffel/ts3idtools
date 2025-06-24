@@ -95,7 +95,7 @@ static bool asn1_parse(ts3_identity* identity, BIGNUM* x, BIGNUM* y, BIGNUM* z)
         debug_printf("  asn1_parse: dangling data: %c\n", *asn1data_pos);
     }
 
-    debug_printf("< asn1_parse(): 1\n");
+    debug_print("< asn1_parse(): 1\n");
     return true;
 }
 

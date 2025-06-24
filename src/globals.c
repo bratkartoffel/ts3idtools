@@ -1,12 +1,6 @@
 #include "globals.h"
 #include "base64.h"
 
-#include <inttypes.h>
-#include <math.h>
-#include <string.h>
-#include <openssl/asn1.h>
-#include <openssl/evp.h>
-
 bool debug = false;
 
 size_t append_counter(uint8_t data[SHA1_MSG_SIZE], size_t length, uint64_t value)
@@ -146,28 +140,28 @@ uint8_t leading_zero_bits(uint32_t hash[5])
     return __builtin_ctz(hash[0]);
 }
 
-/* Check the CPUID bit for the availability of the Intel SHA Extensions */
-bool check_for_intel_sha_extensions()
+#ifndef __aarch64__
+
+#include <cpuid.h>
+bool supports_sha_ni()
 {
-    debug_printf("> check_for_intel_sha_extensions()\n");
-    int a, b, c, d;
+    unsigned int CPUInfo[4];
+    __cpuid(0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+    if (CPUInfo[0] < 7)
+        return 0;
 
-    /* Look for CPUID.7.0.EBX[29]
-     * EAX = 7, ECX = 0 */
-    a = 7;
-    c = 0;
-
-    asm volatile ("cpuid"
-        :"=a"(a), "=b"(b), "=c"(c), "=d"(d)
-        :"a"(a), "c"(c)
-    );
-
-    /* SHA feature bit is EBX[29] */
-    bool result = (b >> 29) & 1;
-
-    debug_printf("< check_for_intel_sha_extensions(): %u\n", result);
-    return result;
+    __cpuid_count(7, 0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+    return CPUInfo[1] & bit_SHA;
 }
+
+#else
+
+bool supports_sha_ni()
+{
+    return false;
+}
+
+#endif
 
 #ifndef HAVE_STRNDUP
 char* strndup(const char* str, size_t maxlen)
