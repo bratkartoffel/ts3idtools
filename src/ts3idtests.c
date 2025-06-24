@@ -79,7 +79,7 @@ void testSha1SameResults()
     fprintf(stderr, "Starting %s\n", __func__);
     if (!supports_sha_ni())
     {
-        fprintf(stderr, "skipping\n");
+        fprintf(stderr, "skipped\n");
         return;
     }
     uint8_t data[128] = {0};
@@ -101,7 +101,7 @@ void testGetSecurityLevel()
     fprintf(stderr, "Starting %s\n", __func__);
     ts3_identity id;
     id.counter = 351;
-    id.pubkey =
+    id.pubkey = (ts3_pubkey_t *)
         "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=";
     id.pubkey_len = strlen((char*)id.pubkey);
     uint8_t level = get_security_level(&id);
@@ -114,7 +114,7 @@ void testGetSecurityLevelOver32()
     fprintf(stderr, "Starting %s\n", __func__);
     ts3_identity id;
     id.counter = 22023984812;
-    id.pubkey =
+    id.pubkey = (ts3_pubkey_t *)
         "MEsDAgcAAgEgAiBuIdUrjo1z1DaVpq3uX6ugIOr1x7SS5cJbRiQo00QSUwIgRHSOqVqqkW8a1cYvrXmnvh3JSeMI/POWg3KvOXjnOUU=";
     id.pubkey_len = strlen((char*)id.pubkey);
     uint8_t level = get_security_level(&id);

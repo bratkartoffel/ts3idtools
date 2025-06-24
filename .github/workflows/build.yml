@@ -41,7 +41,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1 # v1.2.18
         with:
           key: ${{ runner.os }}
-          append-timestamp: false
 
       - name: Cache libressl
         id: cache-libressl
@@ -103,7 +102,6 @@ jobs:
         with:
           key: ${{ runner.os }}
           variant: sccache
-          append-timestamp: false
 
       - name: Cache libressl
         id: cache-libressl
@@ -155,7 +153,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@63069e3931dedbf3b63792097479563182fe70d1 # v1.2.18
         with:
           key: ${{ runner.os }}-${{ matrix.arch }}
-          append-timestamp: false
 
       - name: Cache libressl
         id: cache-libressl
