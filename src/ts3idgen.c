@@ -27,6 +27,7 @@ static void print_usage(const char* name)
            "  -o, --output=FILE      Output filename\n"
            "                         If set to '-' then the identity will be printed to stdout\n"
            "  -v, --verbose          Enable debug output\n"
+           "  -V, --version          Print version information\n"
            "\n"
            "ts3idtools - v%s - created by bratkartoffel - Code at https://github.com/bratkartoffel/ts3idtools\n"
            "\n", name, VERSION);

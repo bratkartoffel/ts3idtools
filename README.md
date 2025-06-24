@@ -19,11 +19,14 @@ Options:
   -h, --help             Print this usage information
   -i, --name=STRING      Name of the generated identity
                          Has to be at most 30 chars, defaults to 'New identity'
+  -l, --level=NUMBER     Minimum level for created identity
+                         Has to be between 4 and 12. For better values use the ts3idcrunch application.
   -n, --nickname=STRING  Nickname for identity
                          Has to be between 3 and 30 characters, defaults to 'anonymous'
   -o, --output=FILE      Output filename
                          If set to '-' then the identity will be printed to stdout
   -v, --verbose          Enable debug output
+  -V, --version          Print version information
 ```
 
 Example:
@@ -52,6 +55,9 @@ Options:
   -i, --identity=STRING  Identity (Starts with a number followed by a 'V')
   -s, --secret           Also print out secret key (DO NOT SHARE THIS!)
   -v, --verbose          Enable debug output
+  -V, --version          Print version information
+
+WARNING: The secret key can be used to 'steal' your identity! Do not share this information with others!
 ```
 
 Example:
@@ -78,9 +84,10 @@ This tool can be used to increase the security level of an identity much faster 
 Usage: ./ts3idcrunch [options]
 Options:
   -b, --blocksize=NUMBER       Blocksize for the worker threads
-                               Power to 2, defaults to 20 (= 1,048,576)
+                               Power to 2, defaults to 21 (= 2,097,152)
   -c, --counter=NUMBER         Starting value for counter
   -h, --help                   Print this usage information
+  -i, --identity=STRING        Identity string (Starts with a number followed by a 'V')
   -p, --publickey=STRING       Public key of identity (usually starts with 'MEw')
   -l, --level=NUMBER           Minimum security level to print out
                                Should not be too small, defaults to 24
@@ -92,6 +99,9 @@ Options:
   -t, --threads=NUMBER         Count of parallel worker threads to spawn
                                Should be lesser than the number of cores, defaults to 2
   -v, --verbose                Enable debug output
+  -V, --version                Print version information
+
+Either the 'publickey' or 'identity' to crunch on have to be specified.
 ```
 
 Example:
@@ -109,8 +119,17 @@ Performance:  139.68 mh/s
 Per Thread:   23.28 mh/s
 ```
 
-The counter value shown (`274687375`) can be directly set in the identity file created by the `ts3idgen` tools and raise
-the security level directly to 28.
+The counter value shown (`5599402157`) can be directly set in the identity file created by the `ts3idgen` tools and raise
+the security level directly to 34.
+
+So the identity file ready for importing to teamspeak is:
+
+```ini
+[Identity]
+id=Generated
+identity="5599402157Vxnape5ikHUyJaeI9pkZoD8e7LCoHLEBja04oRxR6Zm0BRlFFZXp0MVoEChUECUdYVnFjXGd6Vz4CAWEie3tnRAVyW1F6U0pCAzMGMFkAThVHfUZZI1Z2GnVdTVB3MEVYFkJkRTdjVW1BaUE4bC92TVVadFZGQnpwWTJTUDJ1SGJtMUlIZzJTbzVYK0Vsc2diR211Y3ZnPT0="
+nickname=bratkartoffel
+```
 
 ## FAQ
 
@@ -158,8 +177,6 @@ cd libressl
 After that, you can create a build directory and build with cmake as you're probably used to anyways.
 
 ```bash
-mkdir cmake-build
-cd cmake-build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j8
+cmake -DCMAKE_BUILD_TYPE=Debug -Bcmake-build-debug -G Ninja .
+cmake --build cmake-build-debug -j 8
 ```

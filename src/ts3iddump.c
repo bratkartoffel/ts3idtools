@@ -18,6 +18,7 @@ static void print_usage(const char* name)
            "  -i, --identity=STRING  Identity (Starts with a number followed by a 'V')\n"
            "  -s, --secret           Also print out secret key (DO NOT SHARE THIS!)\n"
            "  -v, --verbose          Enable debug output\n"
+           "  -V, --version          Print version information\n"
            "\n"
            "WARNING: The secret key can be used to 'steal' your identity! Do not share this information with others!\n"
            "\n"
